@@ -9,19 +9,19 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="referrer" content="no-referrer" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'" />
-  <meta name="description" content="CATÉNA, PWA autonome de démonstration et de suivi pédagogique de protection électrique caténaire." />
+  <meta name="description" content="PROTECAT, PWA autonome de démonstration et de préparation des plans de protection électrique caténaire." />
   <link rel="icon" href="assets/icon-192.png" sizes="192x192" />
   <link rel="apple-touch-icon" href="assets/icon-192.png" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="stylesheet" href="styles.css" />
-  <title>CATÉNA — Démonstrateur PWA</title>
+  <title>PROTECAT — Concepteur PWA</title>
 </head>
 <body>
   <div class="app-shell">
     <aside class="sidebar">
-      <div class="brand"><span class="brand-symbol" aria-hidden="true">⌁</span><div><strong>CATÉNA<span class="brand-dot">.</span></strong><small>JOURNAL DE CHANTIER</small></div></div>
+      <div class="brand"><div class="brand-badge" aria-hidden="true"><span class="brand-rail"></span><span class="brand-arc"></span><span class="brand-ground"></span></div><div class="brand-copy"><strong>PROTECAT<span class="brand-dot">.</span></strong><small>PROTECTION ÉLECTRIQUE CATÉNAIRE</small></div></div>
       <div class="space-label">ESPACE DE TRAVAIL</div>
-      <div class="sidebar-project"><span class="project-mark">D</span><div><strong>Exercice CATÉNA</strong><span>Plan fictif · PWA 0.2.0</span></div><span class="project-chevron">⌄</span></div>
+      <div class="sidebar-project"><span class="project-mark">D</span><div><strong>Exercice PROTECAT</strong><span>Plan fictif · PWA 0.3.1</span></div><span class="project-chevron">⌄</span></div>
       <div class="space-label nav-label">SUIVI DE L’OPÉRATION</div>
       <nav class="side-nav" aria-label="Navigation principale">
         <button class="nav-button active" data-view="dashboard"><span class="nav-icon">▦</span> Vue d'ensemble</button>
@@ -36,10 +36,10 @@
 
     <div class="main-shell">
       <header class="topbar">
-        <div class="top-title"><span class="mobile-brand">CATÉNA<span>.</span></span><span class="desktop-breadcrumb">CATÉNA autonome <b>/</b> Protection électrique</span></div>
+        <div class="top-title"><span class="mobile-brand">PROTECAT<span>.</span></span><span class="desktop-breadcrumb">PROTECAT <b>/</b> Protection électrique</span></div>
         <div class="top-tools"><div class="connection-pill"><span class="connection-dot"></span> <span id="pwa-connection-label">Démo locale</span></div>
-          <button type="button" id="pwa-install" class="pwa-small-button" hidden aria-label="Installer CATÉNA sur cet appareil">Installer</button>
-          <button type="button" id="pwa-update" class="pwa-small-button pwa-update-button" hidden aria-label="Mettre à jour CATÉNA">Mettre à jour</button>
+          <button type="button" id="pwa-install" class="pwa-small-button" hidden aria-label="Installer PROTECAT sur cet appareil">Installer</button>
+          <button type="button" id="pwa-update" class="pwa-small-button pwa-update-button" hidden aria-label="Mettre à jour PROTECAT">Mettre à jour</button>
           <label class="user-chooser"><span class="user-icon">◉</span><span class="sr-only">Utilisateur de démonstration</span><select id="actor-select" aria-label="Utilisateur de démonstration"><option value="chef">Responsable · A. Martin</option><option value="agent1">Terrain · S. Leroy</option><option value="agent2">Terrain · L. Bernard</option><option value="agent3">Terrain · M. Dubois</option></select><span class="chooser-arrow">⌄</span></label>
         </div>
       </header>
@@ -48,7 +48,7 @@
         <section class="warning-banner" aria-label="Avertissement"><span class="warning-icon">!</span><span><strong>DÉMONSTRATION — NE PAS UTILISER POUR UN CHANTIER RÉEL.</strong> Plan fictif sans données SNCF, positions illustratives, données locales non authentifiées. Ne chargez pas de documents réels. Les procédures et dépêches officielles restent obligatoires.</span><button type="button" id="warning-info" aria-label="En savoir plus">ⓘ</button></section>
         <div id="view-content" class="content-area"></div>
       </main>
-      <footer class="page-footer">CATÉNA · PWA 0.2.0 · Application indépendante · Future intégration à Journal de chantier <span>© 2026</span></footer>
+      <footer class="page-footer">PROTECAT · PWA 0.3.1 · Application indépendante · Future intégration à Journal de chantier <span>© 2026</span></footer>
     </div>
   </div>
 

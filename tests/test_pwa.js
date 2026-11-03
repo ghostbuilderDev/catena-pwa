@@ -28,3 +28,7 @@ for(const file of ['app.js','index.html','styles.css']) {
 assert.ok(!fs.existsSync(path.join(root,'assets','schema_s11_extrait.png')));
 assert.ok(fs.existsSync(path.join(__dirname,'..','.github','workflows','deploy-pages.yml')));
 console.log('✓ PWA : manifest, ressources hors ligne, sécurité des données de démonstration.');
+const worker=read('sw.js');
+assert.ok(worker.includes("const VERSION='protecat-pwa-0.3.1'"),'Version de cache PWA non actualisée');
+assert.ok(fs.existsSync(path.join(__dirname,'..','PROTECAT_MAJ_GITHUB_TERMUX.sh')),'Script Termux manquant');
+console.log('✓ Mise à jour PWA 0.3.1 et installateur présents.');

@@ -1,44 +1,119 @@
-/* CATÉNA 0.2.0 — PWA de démonstration, sans backend ni authentification. */
+/* PROTECAT 0.3.1 — PWA de démonstration, sans backend ni authentification. */
 (() => {
 'use strict';
 const C = window.CatenaCore;
-const SAVE_KEY='catena-pwa-demo-v02';
-const DB_NAME='catena-pwa-demo-photos-v02';
+const SAVE_KEY='protecat-pwa-demo-v03';
+const DB_NAME='protecat-pwa-demo-photos-v03';
 const NAME={chef:'A. Martin',agent1:'S. Leroy',agent2:'L. Bernard',agent3:'M. Dubois'};
-const TITLES={plan:'Plan interactif',dashboard:'Vue d’ensemble',mine:'Mes perches',review:'Recollement',messages:'Transmissions',settings:'Préparation du plan'};
-const TYPES=['CLR','CV','CLR Feeder','CLRS','SELF','Autre (à préciser)'];
-const SYMBOLS=[['ligne-rail','│','Connexion ligne / rail'],['encadrement','▶','Connexion d’encadrement'],['support','∩','Connexion ligne / rail / support'],['self','✕','Connexion ligne / rail / SELF'],['volante','◇','Connexion volante'],['feeder','▷','Connexion ligne / rail Feeder']];
+const TITLES={plan:'Plan interactif',dashboard:'Vue d’ensemble',mine:'Mes perches',review:'Recollement',messages:'Transmissions',settings:'Concepteur de plan'};
+const TYPES=['CLR','CV','CLS','CLR Feeder','SELF','Autre (à préciser)'];
+const SYMBOLS=[
+ ['feeder','★','Connexion ligne / rail Feeder'],
+ ['ligne-rail','✕','Connexion ligne / rail'],
+ ['support','⊗','Connexion ligne / rail / support'],
+ ['encadrement','▶','Connexion d’encadrement'],
+ ['self','☒','Connexion ligne / rail / SELF'],
+ ['volante','∩','Connexion volante']
+];
 function symbolInfo(id){return SYMBOLS.find(s=>s[0]===id)||SYMBOLS[0];}
+function defaultSymbolFromType(type){
+ const t=String(type||'').toUpperCase();
+ if(t.includes('FEEDER'))return 'feeder';
+ if(t==='CV')return 'volante';
+ if(t.includes('SELF'))return 'self';
+ if(t.includes('CLS'))return 'encadrement';
+ return 'ligne-rail';
+}
 const MODE_LABELS={pose:'pose',depose:'dépose'};
 const doc=document;
 let view='dashboard',selected='1',currentUser='chef',zoomWidth=1150,placement=false,editingPin=false,drag=null,suppressClick=false;
-let activeTemplate='pose',photoBuffer=null,imgURL='assets/schema_demo.png',db=null;
+let activeTemplate='pose',photoBuffer=null,imgURL='assets/schema_demo.png',db=null,anchorPlacement=null;
 const listEl=doc.getElementById('view-content');
 const modalRoot=doc.getElementById('modal-root');
 const toastRoot=doc.getElementById('toast-root');
-
+function num(v,d){return Number.isFinite(Number(v))?Number(v):d;}
+function round2(v){return Math.round(Number(v)*100)/100;}
+function clamp(v,min,max){return Math.min(max,Math.max(min,Number(v)));}
+function syncVolanteCenter(p){
+ if(p.symbol==='volante'&&[p.ax,p.ay,p.bx,p.by].every(v=>Number.isFinite(Number(v)))){p.x=round2((Number(p.ax)+Number(p.bx))/2);p.y=round2((Number(p.ay)+Number(p.by))/2);}
+}
+function ensurePointDefaults(p,index=0){
+ p.uid=p.uid||('p'+index+'-'+Math.random().toString(36).slice(2,6));
+ p.symbol=p.symbol||defaultSymbolFromType(p.type);
+ p.type=p.type||'CLR';
+ p.voie=p.voie||'V1';
+ p.support=p.support||'';
+ p.x=clamp(num(p.x,50),.5,99.5);p.y=clamp(num(p.y,50),.5,99.5);
+ p.labelX=clamp(num(p.labelX,p.x+5.5),1,99);
+ p.labelY=clamp(num(p.labelY,p.y-5.5),1,99);
+ p.size=clamp(num(p.size,1),.65,1.9);
+ p.flag=Boolean(p.flag);
+ p.agent=p.agent||'agent1';
+ if(p.symbol==='volante'){
+   p.ax=clamp(num(p.ax,p.x-3.2),.5,99.5);p.ay=clamp(num(p.ay,p.y),.5,99.5);
+   p.bx=clamp(num(p.bx,p.x+3.2),.5,99.5);p.by=clamp(num(p.by,p.y),.5,99.5);
+   syncVolanteCenter(p);
+ }
+ return p;
+}
+function ensureStateDefaults(){
+ state.planMime=state.planMime||'image/png';
+ state.planKind=state.planKind||(state.planMime==='application/pdf'?'pdf':'image');
+ state.points=(state.points||[]).map((p,i)=>ensurePointDefaults(p,i));
+}
+function symbolMarkup(id,small=false){
+ const cls=small?'symbol-svg small':'symbol-svg';
+ if(id==='encadrement')return `<svg viewBox="0 0 100 100" class="${cls}" aria-hidden="true"><polygon points="16,85 86,50 16,15" fill="#2b67c5" stroke="#b2b8c2" stroke-width="10" stroke-linejoin="round"/></svg>`;
+ if(id==='volante')return `<svg viewBox="0 0 100 100" class="${cls}" aria-hidden="true"><path d="M18 72 C18 25,82 25,82 72" fill="none" stroke="#274f9d" stroke-width="14" stroke-linecap="round"/><path d="M23 72 C23 32,77 32,77 72" fill="none" stroke="#4a75ca" stroke-width="8" stroke-linecap="round"/></svg>`;
+ if(id==='feeder')return `<svg viewBox="0 0 100 100" class="${cls}" aria-hidden="true"><polygon points="50,8 61,36 92,36 67,54 76,84 50,66 24,84 33,54 8,36 39,36" fill="#ffd549" stroke="#396ed0" stroke-width="8" stroke-linejoin="round"/></svg>`;
+ if(id==='support')return `<svg viewBox="0 0 100 100" class="${cls}" aria-hidden="true"><circle cx="50" cy="50" r="34" fill="#fff" stroke="#587ab3" stroke-width="9"/><path d="M34 34 L66 66 M66 34 L34 66" stroke="#587ab3" stroke-width="10" stroke-linecap="round"/></svg>`;
+ if(id==='self')return `<svg viewBox="0 0 100 100" class="${cls}" aria-hidden="true"><rect x="19" y="19" width="62" height="62" fill="#fff" stroke="#587ab3" stroke-width="8"/><path d="M35 35 L65 65 M65 35 L35 65" stroke="#587ab3" stroke-width="9" stroke-linecap="round"/></svg>`;
+ return `<svg viewBox="0 0 100 100" class="${cls}" aria-hidden="true"><path d="M30 30 L70 70 M70 30 L30 70" stroke="#3f6cb4" stroke-width="11" stroke-linecap="round"/></svg>`;
+}
+function symbolChoiceOptions(current){return SYMBOLS.map(o=>`<option value="${o[0]}" ${current===o[0]?'selected':''}>${o[2]}</option>`).join('');}
+function pointPos(p){if(p.symbol==='volante'){syncVolanteCenter(p);}return {x:p.x,y:p.y};}
+function connectionLine(x1,y1,x2,y2,cls){const r=state.imgRatio||1.414; const dx=x2-x1, dy=(y2-y1)/r; const len=Math.max(0.2,Math.hypot(dx,dy)); const ang=Math.atan2(dy,dx)*180/Math.PI; return `<div class="${cls}" style="left:${round2(x1)}%;top:${round2(y1)}%;width:${round2(len)}%;transform:rotate(${round2(ang)}deg)"></div>`;}
+function renderPlanConnection(q,isSelected){
+ const p=pointPos(q), status=statusOf(q), title=`Connexion ${q.number} · ${q.voie} · ${name(q.agent)}`;
+ const canDrag = state.phase==='preparation'&&isChef();
+ const mainLine=connectionLine(q.labelX,q.labelY,p.x,p.y,`plan-link ${isSelected?'selected':''}`);
+ const volante=q.symbol==='volante';
+ const span=(volante?connectionLine(q.ax,q.ay,q.bx,q.by,`plan-span-link ${isSelected?'selected':''}`):'');
+ return `<div class="plan-connection ${isSelected?'selected':''} ${status}" data-uid="${esc(q.uid)}">
+   ${span}${mainLine}
+   ${volante?`<button class="plan-anchor ${isSelected?'selected':''} ${canDrag?'plan-draggable':''}" data-action="select-pin" data-drag-type="anchorA" data-uid="${esc(q.uid)}" style="left:${q.ax}%;top:${q.ay}%" title="Extrémité A · ${esc(title)}">A</button>
+   <button class="plan-anchor ${isSelected?'selected':''} ${canDrag?'plan-draggable':''}" data-action="select-pin" data-drag-type="anchorB" data-uid="${esc(q.uid)}" style="left:${q.bx}%;top:${q.by}%" title="Extrémité B · ${esc(title)}">B</button>`:''}
+   <button class="plan-label ${isSelected?'selected':''} ${canDrag?'plan-draggable':''}" data-action="select-pin" data-drag-type="label" data-uid="${esc(q.uid)}" style="left:${q.labelX}%;top:${q.labelY}%" title="${esc(title)}">${esc(q.number)}</button>
+   <button class="plan-pin ${q.agent===currentUser&&['pose','depose'].includes(state.phase)?'mine':''} ${isSelected?'selected':''} ${canDrag&&!volante?'plan-draggable editable':'locked'}" data-action="select-pin" data-drag-type="symbol" data-uid="${esc(q.uid)}" data-status="${status}" style="left:${p.x}%;top:${p.y}%;--symbol-scale:${q.size}" title="${esc(title)}" aria-label="${esc(title)}">${symbolMarkup(q.symbol)}</button>
+ </div>`;
+}
+function planBackground(){
+ if(state.planMime==='application/pdf') return `<object class="plan-background plan-pdf" id="plan-pdf" data="${imgURL}" type="application/pdf"><div class="plan-pdf-fallback">Aperçu PDF indisponible sur ce navigateur.<br>Importez plutôt une image PNG/JPEG pour un positionnement plus précis.</div></object>`;
+ return `<img class="plan-background" alt="Fond de plan de démonstration" id="plan-image" src="${imgURL}">`;
+}
 function initialState(){
  const defs=[
-  ['P01','V1','S01','CLR',true,'agent1',12,47],
-  ['P02','V2','S01','CLR',true,'agent1',20,55],
-  ['P03','V1','S02','CLR',true,'agent2',30,49],
-  ['P04','V2','S02','CLR',true,'agent2',36,57],
-  ['P05','V2','S03','CLR',true,'agent1',44,60],
-  ['P06','V1','S03','CLR',true,'agent2',50,49],
-  ['P07','V2','S04','CLR',true,'agent3',56,57],
-  ['P08','V1','S04','CLR',true,'agent3',62,45],
-  ['P09','V2','S05','CV',false,'agent2',69,58],
-  ['P10','V1','S05','CV',false,'agent1',76,43],
-  ['P11','V2','S06','CLR Feeder',true,'agent3',84,65],
-  ['P12','V1','S06','CLR Feeder',true,'agent3',90,48]
+  {uid:'c1',number:'1',voie:'V1',support:'Encadrement A',type:'CLS',symbol:'encadrement',flag:false,agent:'agent1',x:31,y:57,labelX:27,labelY:57,size:0.96},
+  {uid:'c2',number:'2',voie:'V1',support:'Encadrement B',type:'CLS',symbol:'encadrement',flag:false,agent:'agent1',x:33,y:52,labelX:29,labelY:52,size:0.96},
+  {uid:'c3',number:'3',voie:'V2',support:'Encadrement C',type:'CLS',symbol:'encadrement',flag:false,agent:'agent2',x:79,y:58,labelX:84,labelY:58,size:0.96},
+  {uid:'c4',number:'4',voie:'V2',support:'Encadrement D',type:'CLS',symbol:'encadrement',flag:false,agent:'agent2',x:80,y:52,labelX:84,labelY:52,size:0.96},
+  {uid:'c5',number:'5',voie:'V2',support:'CLR 5',type:'CLR',symbol:'ligne-rail',flag:true,agent:'agent3',x:62,y:53,labelX:67,labelY:52,size:1.0},
+  {uid:'c5p',number:"5'",voie:'V2',support:'CLR 5 bis',type:'CLR',symbol:'ligne-rail',flag:true,agent:'agent3',x:60,y:57,labelX:66,labelY:57,size:1.0},
+  {uid:'c6',number:'6',voie:'V1',support:'CLR 6',type:'CLR',symbol:'ligne-rail',flag:true,agent:'agent1',x:48,y:53,labelX:44,labelY:52,size:1.0},
+  {uid:'c6p',number:"6'",voie:'V1',support:'CLR 6 bis',type:'CLR',symbol:'ligne-rail',flag:true,agent:'agent1',x:48,y:56,labelX:44,labelY:56,size:1.0},
+  {uid:'cA',number:'A',voie:'Sectionnement A',support:'CV A',type:'CV',symbol:'volante',flag:false,agent:'agent2',x:51,y:57,labelX:51,labelY:66,size:1.06,ax:47.2,ay:52.6,bx:54.7,by:52.6},
+  {uid:'cB',number:'B',voie:'Sectionnement B',support:'CV B',type:'CV',symbol:'volante',flag:false,agent:'agent2',x:51,y:51,labelX:51,labelY:45,size:1.06,ax:47.0,ay:47.2,bx:54.4,by:47.2},
+  {uid:'c9',number:'9',voie:'Feeder',support:'Feeder 9',type:'CLR Feeder',symbol:'feeder',flag:false,agent:'agent3',x:28,y:61.2,labelX:23,labelY:63.2,size:1.05},
+  {uid:'c10',number:'10',voie:'Support',support:'Support 10',type:'SELF',symbol:'support',flag:false,agent:'agent3',x:69,y:54.5,labelX:73,labelY:48.5,size:0.98}
  ];
- return {version:'0.2.0',operation:'Exercice fictif CATÉNA',week:'—',year:2026,planName:'Schéma pédagogique fictif · PWA 0.2.0',phase:'preparation',planLocked:false,sourceWarning:true,customPlan:false,imgRatio:1718/755,points:defs.map((a,i)=>({uid:'c'+i,number:a[0],voie:a[1],support:a[2],type:a[3],symbol:a[3]==='CV'?'volante':a[3]==='CLR Feeder'?'feeder':'ligne-rail',flag:a[4],agent:a[5],x:a[6],y:a[7],pose:null,depose:null})),events:[{id:'init',at:new Date().toISOString(),kind:'import',actor:'system',number:null,detail:'Démo fictive initialisée : aucune donnée du chantier réel, repères illustratifs uniquement.'}],authorizationRef:'',removalRef:'',closedAt:null};
+ return {version:'0.3.1',operation:'Exercice fictif PROTECAT',week:'—',year:2026,planName:'Schéma pédagogique fictif · PROTECAT 0.3.1',phase:'preparation',planLocked:false,sourceWarning:true,customPlan:false,planMime:'image/png',planKind:'image',imgRatio:1718/755,points:defs.map((p,i)=>ensurePointDefaults(p,i)),events:[{id:'init',at:new Date().toISOString(),kind:'import',actor:'system',number:null,detail:'Démo fictive initialisée : aucune donnée du chantier réel, repères illustratifs uniquement.'}],authorizationRef:'',removalRef:'',closedAt:null};
 }
 function loadState(){
  try{const value=JSON.parse(localStorage.getItem(SAVE_KEY));if(value&&Array.isArray(value.points)&&Array.isArray(value.events)&&['preparation','pose','depose','terminee'].includes(value.phase))return value;}catch(e){}
  return initialState();
 }
 let state=loadState();
+ensureStateDefaults();
 function persist(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(state));return true;}catch(e){toast('Stockage saturé : exportez votre démonstration.','error');return false;}}
 function stamp(){return new Date().toISOString();}
 function makeId(){return (window.crypto?.randomUUID?.()||`${Date.now()}-${Math.random().toString(36).slice(2)}`);}
@@ -50,7 +125,7 @@ function isChef(){return currentUser==='chef';}
 function point(uid){return state.points.find(x=>x.uid===uid);}
 function selectedPoint(){return point(selected)||state.points[0];}
 function log(kind,number,detail,photoKey=null){state.events.unshift({id:makeId(),at:stamp(),kind,number,detail,actor:currentUser,photoKey});}
-function apply(){persist();render();}
+function apply(){ensureStateDefaults();persist();render();}
 function toast(msg,type=''){toastRoot.innerHTML=`<div class="toast ${type}">${esc(msg)}</div>`;setTimeout(()=>{if(toastRoot.firstElementChild?.textContent===msg)toastRoot.innerHTML='';},4100);}
 function el(id){return doc.getElementById(id);}
 function btn(label,action,variant='btn-ghost',extra=''){return `<button class="btn ${variant}" data-action="${action}" ${extra}>${label}</button>`;}
@@ -69,7 +144,7 @@ function render(){
  el('nav-mine-count').textContent=String(mine);
  const views={dashboard:renderDashboard,plan:renderPlan,mine:renderMine,review:renderReview,messages:renderMessages,settings:renderSettings};
  listEl.innerHTML=(views[view]||renderDashboard)();
- if(view==='plan'){const board=el('plan-board');if(board){board.style.width=zoomWidth+'px';board.style.aspectRatio=String(state.imgRatio||1718/755);}const bg=el('plan-image');if(bg)bg.src=imgURL;}
+ if(view==='plan'){const board=el('plan-board');if(board){board.style.width=zoomWidth+'px';board.style.aspectRatio=String(state.imgRatio||1718/755);}const bg=el('plan-image');if(bg)bg.src=imgURL;const pdf=el('plan-pdf');if(pdf)pdf.data=imgURL;}
  hydratePhotos();
 }
 function renderDashboard(){
@@ -106,28 +181,34 @@ function dashboardPhaseAction(){
  if(state.phase==='preparation')return `<div class="button-row" style="margin-top:20px">${btn('Démarrer la simulation de pose','begin-pose','btn-primary')}</div>`;
  if(state.phase==='pose')return `<div class="button-row" style="margin-top:20px">${btn('Passer aux retraits simulés','begin-depose','btn-primary',C.canOpenDepose(state.points,state.phase)?'':'disabled')}${!C.canOpenDepose(state.points,state.phase)?'<span class="note">Toutes les poses doivent être recollées.</span>':''}</div>`;
  if(state.phase==='depose')return `<div class="button-row" style="margin-top:20px">${btn('Clôturer le suivi de démonstration','close-demo','btn-primary',C.canClose(state.points,state.phase)?'':'disabled')}${!C.canClose(state.points,state.phase)?'<span class="note">Tous les retraits doivent être recollés.</span>':''}</div>`;
- return `<div class="success-strip" style="margin-top:20px">Suivi de démonstration terminé. La restitution officielle reste en dehors de CATÉNA.</div>`;
+ return `<div class="success-strip" style="margin-top:20px">Suivi de démonstration terminé. La restitution officielle reste en dehors de PROTECAT.</div>`;
 }
 function renderPlan(){
  const c=C.counts(state.points);const p=selectedPoint();
- return pageTitle('Un symbole = une connexion = un suivi nominatif','Plan interactif',`${btn('Mes perches','nav-mine','btn-ghost')}${isChef()?btn('Éditer le plan','nav-settings','btn-primary'):''}`)+`
- <div class="operation-bar">${phasePill()}<span class="badge">${c.total} symboles</span><span class="badge">${c.poseVerified} poses recollées</span><span class="badge">${c.removeVerified} retraits recollés</span></div>
+ return pageTitle('Conception et lecture du plan de protection électrique','Plan interactif',`${btn('Mes perches','nav-mine','btn-ghost')}${isChef()?btn('Concepteur de plan','nav-settings','btn-primary'):''}`)+`
+ <div class="operation-bar"><span class="badge accent">A4 conseillé</span>${phasePill()}<span class="badge">${c.total} symboles</span><span class="badge">${c.poseVerified} poses recollées</span><span class="badge">${c.removeVerified} retraits recollés</span></div>
  <div class="plan-layout"><div class="plan-panel">
- <div class="plan-toolbar"><div class="plan-toolbar-left"><strong>⌗ CATÉNA · Schéma pédagogique fictif</strong><span class="subtle">Symboles illustratifs</span></div><div class="plan-toolbar-right"><button class="btn btn-icon" data-action="zoom-out" aria-label="Zoom arrière">−</button><span class="pill muted" id="zoom-level">${Math.round(zoomWidth/1150*100)} %</span><button class="btn btn-icon" data-action="zoom-in" aria-label="Zoom avant">+</button></div></div>
- <div class="plan-viewport" id="plan-viewport"><div class="plan-board" id="plan-board"><img class="plan-background" alt="Schéma pédagogique fictif sans données de chantier" id="plan-image"><div class="plan-watermark">DÉMONSTRATION FICTIVE — AUCUNE VALEUR TECHNIQUE</div><div class="pin-layer">${state.points.map(q=>`<button class="plan-pin ${q.agent===currentUser&&['pose','depose'].includes(state.phase)?'mine':''} ${p?.uid===q.uid?'selected':''} ${state.phase==='preparation'&&isChef()?'editable':'locked'}" data-action="select-pin" data-uid="${esc(q.uid)}" data-status="${statusOf(q)}" style="left:${q.x}%;top:${q.y}%" title="${esc(`Connexion ${q.number} · ${q.voie} · ${name(q.agent)}`)}" aria-label="Connexion ${esc(q.number)}, ${esc(statusOf(q))}">${esc(q.number)}<span class="pin-symbol" aria-hidden="true">${esc(symbolInfo(q.symbol)[1])}</span></button>`).join('')}</div></div></div>
- <div class="plan-bottom"><div class="legend"><span class="legend-item"><i class="legend-dot"></i> À faire</span><span class="legend-item"><i class="legend-dot declared"></i> Déclarée</span><span class="legend-item"><i class="legend-dot verified"></i> Vérifiée</span><span class="legend-item"><i class="legend-dot issue"></i> Écart</span><span class="legend-item"><i class="legend-dot removed"></i> Retirée</span></div><span class="note">Défilement horizontal et zoom disponibles.</span></div><div class="symbol-legend">${SYMBOLS.map(s=>`<span><b>${esc(s[1])}</b> ${esc(s[2])}</span>`).join('')}</div>
- ${state.phase==='preparation'&&isChef()?`<div class="card card-pad" style="margin-top:9px"><div class="section-card-header"><div><h3 style="margin:0">Placer des symboles</h3><p>En mode édition, toucher le schéma pour créer une connexion.</p></div>${btn(placement?'Annuler le placement':'＋ Ajouter un symbole','toggle-placement',placement?'btn-danger':'btn-soft')}</div><p class="note" style="margin:0">${placement?'Mode placement actif : touchez un emplacement sur le plan.':'Déplacez les symboles existants par glisser-déposer. Positions provisoires importées de l’exemple.'}</p></div>`:''}
+ <div class="plan-toolbar"><div class="plan-toolbar-left"><strong>PROTECAT · plan de protection</strong><span class="subtle">Import image ou PDF · fond A4 · palette PPE</span></div><div class="plan-toolbar-right"><button class="btn btn-icon" data-action="zoom-out" aria-label="Zoom arrière">−</button><span class="pill muted" id="zoom-level">${Math.round(zoomWidth/1150*100)} %</span><button class="btn btn-icon" data-action="zoom-in" aria-label="Zoom avant">+</button></div></div>
+ <div class="plan-viewport" id="plan-viewport"><div class="plan-board" id="plan-board">${planBackground()}<div class="plan-watermark">DÉMONSTRATION FICTIVE — AUCUNE VALEUR TECHNIQUE</div><div class="pin-layer">${state.points.map(q=>renderPlanConnection(q,p?.uid===q.uid)).join('')}</div></div></div>
+ <div class="plan-bottom"><div class="legend"><span class="legend-item"><i class="legend-dot"></i> À faire</span><span class="legend-item"><i class="legend-dot declared"></i> Déclarée</span><span class="legend-item"><i class="legend-dot verified"></i> Vérifiée</span><span class="legend-item"><i class="legend-dot issue"></i> Écart</span><span class="legend-item"><i class="legend-dot removed"></i> Retirée</span></div><span class="note">Touchez un symbole ou son numéro pour le mettre en évidence.</span></div>
+ <div class="symbol-legend rich">${SYMBOLS.map(s=>`<span>${symbolMarkup(s[0],true)} ${esc(s[2])}</span>`).join('')}</div>
+ ${state.phase==='preparation'&&isChef()?`<div class="card card-pad plan-instructions" style="margin-top:9px"><div class="section-card-header"><div><h3 style="margin:0">Conception du plan</h3><p>Le numéro est détaché du symbole et relié par une ligne de rappel. Le symbole, le numéro et, pour les CV, les extrémités A/B peuvent être déplacés.</p></div>${btn(placement?'Annuler le placement':'＋ Ajouter un symbole','toggle-placement',placement?'btn-danger':'btn-soft')}</div><div class="mini-tool-row"><span class="pill blue">Étape 1</span><span>Importer le fond S11</span><span class="pill blue">Étape 2</span><span>Placer les symboles</span><span class="pill blue">Étape 3</span><span>Ajuster taille et numéro</span></div><p class="note" style="margin:9px 0 0">${anchorPlacement?`Placement de l’extrémité ${anchorPlacement.which==='a'?'A':'B'} en attente : touchez le plan au bon endroit.`:placement?'Mode placement actif : touchez un emplacement sur le plan pour créer un nouveau symbole.':'Astuce : utilisez les boutons − / + dans la fiche de droite pour redimensionner rapidement le symbole sélectionné.'}</p></div>`:''}
  </div>
  <aside class="plan-side">${p?renderPointDetail(p):`<div class="card side-detail">Aucune connexion sélectionnée.</div>`}</aside></div>`;
 }
+
 function renderPointDetail(p){
  const mode=state.phase==='depose'||state.phase==='terminee'?'depose':'pose';
  const datum=p[mode];
  const action=actionOf(p);
- return `<div class="card side-detail"><div class="ref">REPÈRE SÉLECTIONNÉ</div><div class="big-ref">Connexion ${esc(p.number)}</div>${badge(statusOf(p))}<div class="info-grid"><div><div class="info-caption">Voie</div><strong>${esc(p.voie)}</strong></div><div><div class="info-caption">Support</div><strong>${esc(p.support||'À renseigner')}</strong></div><div><div class="info-caption">Équipement</div><strong>${esc(p.type)}</strong></div><div><div class="info-caption">Symbole du plan</div><strong>${esc(symbolInfo(p.symbol)[2])}</strong></div><div><div class="info-caption">Agent affecté</div><strong>${esc(name(p.agent))}</strong></div><div><div class="info-caption">Drapeau / lampe bleue</div><strong>${p.flag?'Prévu dans l’exercice':'Non indiqué'}</strong></div><div><div class="info-caption">Dernière attestation</div><strong>${datum?.at?formatTime(datum.at):'Aucune'}</strong></div></div>
- <div class="side-separator"></div><div class="button-row">${action?btn(`${mode==='pose'?'↥ Déclarer la pose':'↧ Déclarer le retrait'}`,'do-point','btn-primary',`data-uid="${esc(p.uid)}"`):''}${isChef()&&state.phase==='preparation'?btn('Modifier / affecter','edit-point','btn-primary',`data-uid="${esc(p.uid)}"`):''}${isChef()&&(state.phase==='pose'||state.phase==='depose')?btn('Voir au recollement','nav-review','btn-soft'):''}${!action&&state.phase!=='preparation'?'<small class="note">Actions disponibles uniquement pour l’agent affecté et dans la phase concernée.</small>':''}</div>
- <div class="detail-footer"><p>◉ <strong>Une photo ne prouve pas seule la bonne exécution.</strong> La déclaration de l'agent et le contrôle indépendant sont distingués.</p></div></div>`;
+ const canEdit=isChef()&&state.phase==='preparation';
+ return `<div class="card side-detail"><div class="ref">REPÈRE SÉLECTIONNÉ</div><div class="big-ref">Connexion ${esc(p.number)}</div>${badge(statusOf(p))}<div class="info-grid"><div><div class="info-caption">Voie</div><strong>${esc(p.voie)}</strong></div><div><div class="info-caption">Support</div><strong>${esc(p.support||'À renseigner')}</strong></div><div><div class="info-caption">Équipement</div><strong>${esc(p.type)}</strong></div><div><div class="info-caption">Symbole du plan</div><strong>${esc(symbolInfo(p.symbol)[2])}</strong></div><div><div class="info-caption">Agent affecté</div><strong>${esc(name(p.agent))}</strong></div><div><div class="info-caption">Taille du symbole</div><strong>${Math.round((p.size||1)*100)} %</strong></div><div><div class="info-caption">Dernière attestation</div><strong>${datum?.at?formatTime(datum.at):'Aucune'}</strong></div></div>
+ <div class="side-separator"></div>
+ ${canEdit?`<div class="quick-adjust"><div class="mini-heading">OUTILS DE CONCEPTION</div><div class="button-row">${btn('− Taille','size-down','btn-ghost btn-sm',`data-uid="${esc(p.uid)}"`)}${btn('+ Taille','size-up','btn-ghost btn-sm',`data-uid="${esc(p.uid)}"`)}${btn('Modifier','edit-point','btn-primary btn-sm',`data-uid="${esc(p.uid)}"`)}</div>${p.symbol==='volante'?`<div class="button-row" style="margin-top:8px">${btn('Placer point A','place-anchor-a','btn-soft btn-sm',`data-uid="${esc(p.uid)}"`)}${btn('Placer point B','place-anchor-b','btn-soft btn-sm',`data-uid="${esc(p.uid)}"`)}</div><p class="note" style="margin:8px 0 0">Pour une connexion volante, posez une extrémité de chaque côté du sectionnement.</p>`:'<p class="note" style="margin:8px 0 0">Le numéro peut être déplacé indépendamment sur le plan : faites glisser la pastille jaune.</p>'}</div><div class="side-separator"></div>`:''}
+ <div class="button-row">${action?btn(`${mode==='pose'?'↥ Déclarer la pose':'↧ Déclarer le retrait'}`,'do-point','btn-primary',`data-uid="${esc(p.uid)}"`):''}${isChef()&&(state.phase==='pose'||state.phase==='depose')?btn('Voir au recollement','nav-review','btn-soft'):''}${!action&&state.phase!=='preparation'?'<small class="note">Actions disponibles uniquement pour l’agent affecté et dans la phase concernée.</small>':''}</div>
+ <div class="detail-footer"><p>◉ <strong>Cliquer le numéro ou le symbole</strong> met en valeur la liaison visuelle sur le plan pour limiter les erreurs de lecture.</p></div></div>`;
 }
+
 function renderMine(){
  const mine=state.points.filter(p=>p.agent===currentUser);
  const items=isChef()?state.points:mine;
@@ -156,7 +237,7 @@ function renderReview(){
 }
 function messageText(){
  const c=C.counts(state.points),d=new Date().toLocaleString('fr-FR');const labels={pose:'Notification des poses',reco:'État de recollement',depose:'Notification des retraits',incident:'Signalement d’écart'};
- const first=`BROUILLON NON OFFICIEL — NE VAUT PAS DÉPÊCHE NI AUTORISATION\nCATÉNA · Exercice fictif · Sans valeur opérationnelle\nÉtabli le ${d} par ${name(currentUser)}\nType : ${labels[activeTemplate]}\n`;
+ const first=`BROUILLON NON OFFICIEL — NE VAUT PAS DÉPÊCHE NI AUTORISATION\nPROTECAT · Exercice fictif · Sans valeur opérationnelle\nÉtabli le ${d} par ${name(currentUser)}\nType : ${labels[activeTemplate]}\n`;
  let body='';
  if(activeTemplate==='pose'){body=`Poses déclarées : ${c.posed}/${c.total}.\nRepères : ${state.points.filter(p=>p.pose?.declared).map(p=>p.number).join(', ')||'aucun'}.\nPoses recollées : ${c.poseVerified}/${c.total}.`;}
  if(activeTemplate==='reco'){body=`Poses recollées : ${c.poseVerified}/${c.total}.\nRetraits recollés : ${c.removeVerified}/${c.total}.\nÉcarts : ${c.issues}.\nConnexions en attente : ${state.points.filter(p=>!p.pose?.verified).map(p=>p.number).join(', ')||'aucune'}.`;}
@@ -174,19 +255,21 @@ function renderMessages(){
 function eventLabel(kind){return {import:'Plan de travail préparé',openpose:'Simulation de pose ouverte',pose:'Pose déclarée',poseOK:'Pose recollée',poseIssue:'Écart sur pose',opendepose:'Simulation de dépose ouverte',depose:'Retrait déclaré',deposeOK:'Retrait recollé',deposeIssue:'Écart sur retrait',close:'Suivi clôturé',add:'Symbole ajouté',update:'Connexion modifiée',delete:'Symbole retiré du plan',plan:'Schéma remplacé'}[kind]||'Événement';}
 function eventIcon(kind){return {pose:'↥',poseOK:'✓',depose:'↧',deposeOK:'✓',poseIssue:'!',deposeIssue:'!',import:'⌗',add:'＋',update:'✎',plan:'⌗',close:'●'}[kind]||'◉';}
 function renderSettings(){
- return pageTitle('Modifiez le plan avant d’ouvrir une session de démonstration','Préparer le plan',`${btn('⌗ Visualiser le schéma','nav-plan','btn-primary')}`)+`
- <div class="settings-grid"><div class="card settings-card"><h2>Le schéma de base</h2><p>Importez une capture S11, puis positionnez les symboles sur le plan. Un schéma fictif est chargé par défaut ; aucune donnée réelle n’est publiée.</p>
- <div class="readonly-description"><b>Source :</b> ${esc(state.planName)}<br><b>Références :</b> Plan fictif de formation<br><b>Statut :</b> ${state.planLocked?'Plan figé après ouverture de la simulation':'Ébauche à vérifier'}<br><b>Important :</b> capture et coordonnées non validées pour exploitation.</div>
- <div class="form-field"><label for="plan-upload">Importer une image de fond (PNG/JPEG)</label><input class="input" type="file" id="plan-upload" accept="image/png,image/jpeg,image/webp" ${(!isChef()||state.planLocked)?'disabled':''}/><small>Les symboles restent à leur emplacement en pourcentage ; repositionnez-les ensuite si vous changez d’image.</small></div>
- <div class="button-row">${btn('Ajouter un repère sur le plan','add-from-settings','btn-soft',(!isChef()||state.planLocked)?'disabled':'')}${btn('↓ Exporter les données démo','export-json','btn-ghost')}</div>
+ return pageTitle('Préparer le plan sur PC, avec retouches possibles sur tablette','Concepteur de plan',`${btn('⌗ Visualiser le schéma','nav-plan','btn-primary')}`)+`
+ <div class="settings-grid"><div class="card settings-card"><h2>Fond du plan</h2><p>Le premier travail se fait ici : import du fond S11, plutôt en image, avec prise en charge d’un PDF en dépannage. Le rendu visuel est pensé prioritairement pour un format A4.</p>
+ <div class="readonly-description"><b>Source :</b> ${esc(state.planName)}<br><b>Format détecté :</b> ${state.planMime==='application/pdf'?'PDF':'Image'}<br><b>Statut :</b> ${state.planLocked?'Plan figé après ouverture de la simulation':'Ébauche de préparation'}<br><b>Conseil :</b> préférez une image propre, bien recadrée, pour un placement plus précis.</div>
+ <div class="form-field"><label for="plan-upload">Importer un fond de plan (PNG/JPEG/WEBP/PDF)</label><input class="input" type="file" id="plan-upload" accept="image/png,image/jpeg,image/webp,application/pdf,.pdf" ${(!isChef()||state.planLocked)?'disabled':''}/><small>Après changement du fond, contrôlez le placement et le sens des symboles. Les coordonnées restent enregistrées en pourcentage.</small></div>
+ <div class="button-row">${btn('Ajouter un repère au plan','add-from-settings','btn-soft',(!isChef()||state.planLocked)?'disabled':'')}${btn('↓ Exporter les données démo','export-json','btn-ghost')}</div>
+ <div class="divider"></div><h2>Palette des symboles</h2><p>Les symboles ci-dessous reprennent la logique de la légende du plan PPE.</p><div class="symbol-palette">${SYMBOLS.map(s=>`<div class="palette-item">${symbolMarkup(s[0],false)}<strong>${esc(s[2])}</strong></div>`).join('')}</div>
  <div class="divider"></div><h2>Reprise de la démonstration</h2><p>Ces fichiers ne sont ni des plans officiellement validés ni des preuves de transmission sécurisée.</p>
  <div class="form-field"><label for="import-json">Restaurer un export JSON de cette démo</label><input type="file" class="input" id="import-json" accept="application/json,.json" /></div><div class="button-row">${btn('↺ Réinitialiser la démo','reset-demo','btn-danger')}</div>
- </div><div class="card settings-card"><div class="section-card-header"><div><h2>Connexions du plan (${state.points.length})</h2><p>Numéro, voie, support, matériel, agent</p></div>${phasePill()}</div>
- <div>${state.points.map(p=>`<div class="edit-point-row"><div class="point-emblem" style="width:43px;height:43px;flex-basis:43px">${esc(p.number)}</div><div><strong>${esc(p.voie)} · ${esc(p.type)}</strong><small>${esc(p.support)} · ${esc(name(p.agent))}</small></div><div class="edit-tools">${btn('Modifier','edit-point','btn-ghost btn-sm',`data-uid="${esc(p.uid)}" ${state.planLocked||!isChef()?'disabled':''}`)}</div></div>`).join('')}</div>
- <div class="divider"></div><div class="note warning">Les habilitations, autorisations, rôles et circuits de contrôle doivent être paramétrés puis validés avant toute utilisation réelle.</div></div></div>`;
+ </div><div class="card settings-card"><div class="section-card-header"><div><h2>Connexions du plan (${state.points.length})</h2><p>Numéro, type, taille, affectation</p></div>${phasePill()}</div>
+ <div>${state.points.map(p=>`<div class="edit-point-row"><div class="point-emblem" style="width:43px;height:43px;flex-basis:43px">${esc(p.number)}</div><div><strong>${esc(symbolInfo(p.symbol)[2])}</strong><small>${esc(p.voie)} · ${esc(p.type)} · ${Math.round((p.size||1)*100)} % · ${esc(name(p.agent))}</small></div><div class="edit-tools">${btn('Modifier','edit-point','btn-ghost btn-sm',`data-uid="${esc(p.uid)}" ${state.planLocked||!isChef()?'disabled':''}`)}</div></div>`).join('')}</div>
+ <div class="divider"></div><div class="note warning">Objectif de cette mise à jour : un plan plus lisible, plus intuitif et plus sûr à préparer avant diffusion terrain.</div></div></div>`;
 }
 
-// Local photograph store. IndexedDB is NOT secure storage; this demo must not be used with real evidence.
+
+// Local photograph store.// Local photograph store. IndexedDB is NOT secure storage; this demo must not be used with real evidence.
 function openDatabase(){return new Promise((resolve,reject)=>{
  if(!('indexedDB' in window))return reject(new Error('Stockage local des photos indisponible'));
  const req=indexedDB.open(DB_NAME,1);
@@ -230,12 +313,12 @@ function imageAsDataURL(file,maxWidth=1400,quality=.77){return new Promise((reso
 function downloadBlob(filename,mime,text){const url=URL.createObjectURL(new Blob([text],{type:mime}));const a=doc.createElement('a');a.href=url;a.download=filename;a.style.display='none';doc.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},1500);}
 function filenameDate(){return new Date().toISOString().slice(0,10);}
 function csv(v){return `"${String(v??'').replace(/"/g,'""')}"`;}
-function exportEventsCSV(){const head=['Date serveur (non vérifiée)','Événement','Connexion','Utilisateur (démo)','Détails','Référence photo locale'];const rows=state.events.slice().reverse().map(x=>[x.at,eventLabel(x.kind),x.number||'',name(x.actor),x.detail,x.photoKey||'']);const data=[head,...rows].map(row=>row.map(csv).join(';')).join('\r\n');downloadBlob(`CATENA_Journal_demo_${filenameDate()}.csv`,'text/csv;charset=utf-8','\ufeff'+data);toast('Historique CSV exporté (données locales non certifiées).');}
+function exportEventsCSV(){const head=['Date serveur (non vérifiée)','Événement','Connexion','Utilisateur (démo)','Détails','Référence photo locale'];const rows=state.events.slice().reverse().map(x=>[x.at,eventLabel(x.kind),x.number||'',name(x.actor),x.detail,x.photoKey||'']);const data=[head,...rows].map(row=>row.map(csv).join(';')).join('\r\n');downloadBlob(`PROTECAT_Journal_demo_${filenameDate()}.csv`,'text/csv;charset=utf-8','\ufeff'+data);toast('Historique CSV exporté (données locales non certifiées).');}
 async function exportDemoJSON(){
  const keys=new Set([...state.points.flatMap(p=>[p.pose?.photoKey,p.depose?.photoKey]),...state.events.map(e=>e.photoKey),state.customPlan?'plan_custom':''].filter(Boolean));
  const images={};for(const key of keys){const value=await fetchImage(key).catch(()=>null);if(value)images[key]=value;}
  const payload={_catena:'export-local-demo-0.1.0',exported:stamp(),state,images};
- downloadBlob(`CATENA_Sauvegarde_demo_${filenameDate()}.json`,'application/json;charset=utf-8',JSON.stringify(payload,null,2));toast('Export JSON créé (sans garantie de conservation).');
+ downloadBlob(`PROTECAT_Sauvegarde_demo_${filenameDate()}.json`,'application/json;charset=utf-8',JSON.stringify(payload,null,2));toast('Export JSON créé (sans garantie de conservation).');
 }
 async function restoreDemoJSON(file){
  if(!file||file.size>40_000_000)throw new Error('Fichier JSON trop volumineux.');
@@ -260,7 +343,7 @@ function beginDepose(){if(!isChef()||!C.canOpenDepose(state.points,state.phase))
  el('form-phase-depose').addEventListener('submit',ev=>{ev.preventDefault();if(!el('depose-confirm').checked)return;state.removalRef=el('reference-depose').value.trim();if(!state.removalRef)return;state.phase='depose';log('opendepose',null,`Retrait en démonstration ouvert. Référence simulée : ${state.removalRef}`);closeModal();apply();});
 }
 function closeDemo(){if(!isChef()||!C.canClose(state.points,state.phase))return toast('Clôture bloquée : un retrait n’est pas recollé.','error');
- confirmOnly('Clôturer le suivi de démonstration',`Les ${state.points.length} retraits ont été recollés dans la démonstration. CATÉNA ne restitue ni voie, ni ARF, ni consignation.`,`Clôturer la démonstration`,()=>{state.phase='terminee';state.closedAt=stamp();log('close',null,'Tous les retraits déclaratifs sont recollés en démonstration. Restitution documentaire extérieure non effectuée.');},'Je comprends que cette clôture ne constitue pas une restitution officielle de protection électrique.');
+ confirmOnly('Clôturer le suivi de démonstration',`Les ${state.points.length} retraits ont été recollés dans la démonstration. PROTECAT ne restitue ni voie, ni ARF, ni consignation.`,`Clôturer la démonstration`,()=>{state.phase='terminee';state.closedAt=stamp();log('close',null,'Tous les retraits déclaratifs sont recollés en démonstration. Restitution documentaire extérieure non effectuée.');},'Je comprends que cette clôture ne constitue pas une restitution officielle de protection électrique.');
 }
 function attestationModal(p,mode){
  if(!p)return;
@@ -321,24 +404,33 @@ function reviewModal(p){
 function openPhoto(key){modal('Photo déclarative','Archive privée sur cet appareil uniquement',`<p class="note">Photo soumise lors d’une déclaration. Aucune certification ni horodatage serveur.</p><img data-photo-key="${esc(key)}" class="photo-preview" style="height:auto;max-height:58vh;object-fit:contain" alt="Photo déclarative"><div class="modal-warning">Vérifier le repère et les informations ; la photo n'est pas une preuve suffisante du respect des prescriptions.</div>`,`${btn('Fermer','modal-cancel','btn-ghost')}`);}
 function editPointModal(p=null,x=50,y=50){
  if(!isChef()||state.phase!=='preparation')return toast('Plan verrouillé après ouverture de la pose.','error');
- const edit=Boolean(p);const q=p||{uid:'c'+makeId(),number:'',voie:'1M',support:'',type:'CLR',symbol:'ligne-rail',agent:'agent1',flag:false,x,y};
- modal(edit?'Modifier une connexion':'Ajouter une connexion','Préparation et affectation des repères',`<form id="point-form"><div class="form-grid"><div class="form-field"><label for="point-number">Numéro de connexion *</label><input class="input" id="point-number" value="${esc(q.number)}" maxlength="20" required placeholder="Ex. 12"></div><div class="form-field"><label for="point-voie">Voie *</label><input class="input" id="point-voie" value="${esc(q.voie)}" maxlength="30" required></div><div class="form-field"><label for="point-support">Support / PK *</label><input class="input" id="point-support" value="${esc(q.support)}" maxlength="60" required></div><div class="form-field"><label for="point-type">Type de dispositif *</label><select class="input" id="point-type">${TYPES.map(t=>`<option ${q.type===t?'selected':''}>${esc(t)}</option>`).join('')}</select></div><div class="form-field"><label for="point-symbol">Symbole sur le plan *</label><select class="input" id="point-symbol">${SYMBOLS.map(o=>`<option value="${o[0]}" ${q.symbol===o[0]?'selected':''}>${esc(o[1])} ${esc(o[2])}</option>`).join('')}</select></div><div class="form-field"><label for="point-agent">Agent affecté *</label><select class="input" id="point-agent">${Object.keys(NAME).filter(k=>k!=='chef').map(k=>`<option value="${k}" ${q.agent===k?'selected':''}>${esc(name(k))}</option>`).join('')}</select></div><div class="form-field"><label>Drapeau / lampe bleue</label><label class="check-row"><input type="checkbox" id="point-flag" ${q.flag?'checked':''}> Prévu dans l’exercice</label></div></div><p class="note">Placement : ${Math.round(q.x)} % largeur, ${Math.round(q.y)} % hauteur du schéma. Le déplacement précis se fait en glissant le symbole sur le plan.</p><div class="button-row" style="justify-content:flex-end;margin-top:16px">${edit?`<button type="button" id="point-delete" class="btn btn-danger">Supprimer</button>`:''}<button type="button" class="btn btn-ghost" data-action="modal-cancel">Annuler</button><button type="submit" class="btn btn-primary">Enregistrer</button></div></form>`);
+ const edit=Boolean(p);const q=ensurePointDefaults(p||{uid:'c'+makeId(),number:'',voie:'V1',support:'',type:'CLR',symbol:'ligne-rail',agent:'agent1',flag:false,x,y,labelX:x+5,labelY:y-5,size:1}, state.points.length+1);
+ modal(edit?'Modifier une connexion':'Ajouter une connexion','Préparation et affectation des repères',`<form id="point-form"><div class="form-grid"><div class="form-field"><label for="point-number">Numéro de connexion *</label><input class="input" id="point-number" value="${esc(q.number)}" maxlength="20" required placeholder="Ex. 12 ou A"></div><div class="form-field"><label for="point-voie">Voie / zone *</label><input class="input" id="point-voie" value="${esc(q.voie)}" maxlength="30" required></div><div class="form-field"><label for="point-support">Support / PK *</label><input class="input" id="point-support" value="${esc(q.support)}" maxlength="60" required></div><div class="form-field"><label for="point-type">Type de dispositif *</label><select class="input" id="point-type">${TYPES.map(t=>`<option ${q.type===t?'selected':''}>${esc(t)}</option>`).join('')}</select></div><div class="form-field"><label for="point-symbol">Symbole sur le plan *</label><select class="input" id="point-symbol">${symbolChoiceOptions(q.symbol)}</select></div><div class="form-field"><label for="point-agent">Agent affecté *</label><select class="input" id="point-agent">${Object.keys(NAME).filter(k=>k!=='chef').map(k=>`<option value="${k}" ${q.agent===k?'selected':''}>${esc(name(k))}</option>`).join('')}</select></div><div class="form-field"><label>Drapeau / lampe bleue</label><label class="check-row"><input type="checkbox" id="point-flag" ${q.flag?'checked':''}> Prévu dans l’exercice</label></div></div><p class="note">Le numéro restera dissocié du symbole et relié par une ligne de rappel. Le réglage fin du placement se fait ensuite directement sur le plan, par glisser-déposer. Les CV peuvent recevoir deux extrémités A/B.</p><div class="button-row" style="justify-content:flex-end;margin-top:16px">${edit?`<button type="button" id="point-delete" class="btn btn-danger">Supprimer</button>`:''}<button type="button" class="btn btn-ghost" data-action="modal-cancel">Annuler</button><button type="submit" class="btn btn-primary">Enregistrer</button></div></form>`);
  el('point-form').addEventListener('submit',ev=>{ev.preventDefault();const no=el('point-number').value.trim(),voie=el('point-voie').value.trim(),support=el('point-support').value.trim();
   if(!no||!voie||!support)return toast('Les trois informations sont obligatoires.','error');if(state.points.some(o=>o.number===no&&o.uid!==q.uid))return toast('Ce numéro existe déjà.','error');
-  const values={number:no,voie,support,type:el('point-type').value,symbol:el('point-symbol').value,agent:el('point-agent').value,flag:el('point-flag').checked};
-  if(edit)Object.assign(p,values);else{Object.assign(q,values);state.points.push(q);selected=q.uid;}
-  log(edit?'update':'add',no,`${edit?'Connexion modifiée':'Nouvelle connexion ajoutée'} : ${voie}, support ${support}, affectée à ${name(values.agent)}.`);placement=false;closeModal();view='plan';apply();toast('Plan de démonstration mis à jour.');
+  const symbol=el('point-symbol').value;const values={number:no,voie,support,type:el('point-type').value,symbol,agent:el('point-agent').value,flag:el('point-flag').checked};
+  values.symbol=symbol||defaultSymbolFromType(values.type);
+  if(edit)Object.assign(p,values);else{Object.assign(q,values);ensurePointDefaults(q,state.points.length+1);state.points.push(q);selected=q.uid;}
+  if((edit?p:q).symbol==='volante') ensurePointDefaults(edit?p:q,state.points.length+1);
+  log(edit?'update':'add',no,`${edit?'Connexion modifiée':'Nouvelle connexion ajoutée'} : ${voie}, support ${support}, affectée à ${name(values.agent)}.`);placement=false;anchorPlacement=null;closeModal();view='plan';apply();toast('Plan de démonstration mis à jour.');
  });
  if(edit)el('point-delete').addEventListener('click',()=>{if(state.points.length<=1)return toast('Le plan doit comporter au moins un repère.','error');state.points=state.points.filter(o=>o.uid!==q.uid);selected=state.points[0]?.uid||'';log('delete',q.number,'Repère retiré du projet de plan, avant validation.');closeModal();apply();toast('Repère supprimé.');});
 }
-async function importPlan(file){if(!isChef()||state.planLocked)return toast('Plan verrouillé.','error');try{const converted=await imageAsDataURL(file,2500,.82);await storeImage('plan_custom',converted.data);imgURL=converted.data;state.customPlan=true;state.imgRatio=converted.ratio;state.planName=`Image importée : ${file.name}`;log('plan',null,'Nouvelle image S11 de travail importée. Placement des symboles à réexaminer.');apply();toast('Schéma chargé. Repositionnez les symboles avant validation.');}catch(e){toast(e.message||'Échec de lecture du schéma.','error');}}
-function resetModal(){confirmOnly('Réinitialiser CATÉNA',`Toutes les attestations et photos de cette démonstration seront effacées localement. Une sauvegarde JSON peut être faite préalablement.`,`Effacer la démo`,()=>{state=initialState();view='dashboard';selected=state.points[0].uid;imgURL='assets/schema_demo.png';zoomWidth=1150;placement=false;clearImages().catch(()=>{});},'Je confirme l’effacement définitif des données locales de cette démonstration.');}
-function helpModal(){modal('CATÉNA est un prototype','Sécurité ferroviaire et périmètre d’utilisation',`<p>Cette version permet de tester la navigation, les affectations, les attestations avec photos et le recollement sur un appareil. Elle <strong>ne dispose pas</strong> d’authentification, de serveur, de synchronisation, de signature électronique probante ni d’envoi de dépêches sécurisées.</p><div class="modal-warning"><strong>Aucun usage opérationnel.</strong> Les données sont manipulables localement, les positions sont illustratives, et le plan pédagogique ne constitue pas une validation technique. Aucune autorisation de pose, dépose, chantier, consignation, restitution d’ARF ou remise sous tension n'est fournie.</div><p class="note">Avant déploiement : validation par les responsables métier, sécurité ferroviaire, électricité et cybersécurité ; référentiels applicables ; habilitations ; contrôles ; moyens de transmission officiels ; tests terrain et gestion du mode dégradé.</p>`,`${btn('Compris','modal-cancel','btn-primary')}`);}
+function readFileAsDataURL(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onerror=()=>reject(new Error('Lecture du fichier impossible'));reader.onload=()=>resolve(String(reader.result||''));reader.readAsDataURL(file);});}
+async function importPlan(file){if(!isChef()||state.planLocked)return toast('Plan verrouillé.','error');try{
+  if(file.type==='application/pdf'||String(file.name).toLowerCase().endsWith('.pdf')){const data=await readFileAsDataURL(file);await storeImage('plan_custom',data);imgURL=data;state.customPlan=true;state.planMime='application/pdf';state.planKind='pdf';state.imgRatio=1.414;state.planName=`PDF importé : ${file.name}`;}
+  else {const converted=await imageAsDataURL(file,2500,.82);await storeImage('plan_custom',converted.data);imgURL=converted.data;state.customPlan=true;state.planMime='image/png';state.planKind='image';state.imgRatio=converted.ratio;state.planName=`Image importée : ${file.name}`;}
+  log('plan',null,'Nouveau fond de plan importé. Le placement des symboles doit être revérifié.');apply();toast('Fond de plan chargé. Vérifiez et repositionnez les symboles.');
+ }catch(e){toast(e.message||'Échec de lecture du schéma.','error');}}
+function resetModal(){confirmOnly('Réinitialiser PROTECAT',`Toutes les attestations et photos de cette démonstration seront effacées localement. Une sauvegarde JSON peut être faite préalablement.`,`Effacer la démo`,()=>{state=initialState();ensureStateDefaults();view='dashboard';selected=state.points[0].uid;imgURL='assets/schema_demo.png';zoomWidth=1150;placement=false;anchorPlacement=null;clearImages().catch(()=>{});},'Je confirme l’effacement définitif des données locales de cette démonstration.');}
+function helpModal(){modal('PROTECAT est un prototype','Sécurité ferroviaire et périmètre d’utilisation',`<p>Cette version priorise désormais la <strong>construction du plan</strong> : import du fond, placement des symboles, numéros détachés, taille des icônes et repérage visuel amélioré.</p><div class="modal-warning"><strong>Aucun usage opérationnel.</strong> Les données sont manipulables localement, les positions sont illustratives, et le plan pédagogique ne constitue pas une validation technique. Aucune autorisation de pose, dépose, chantier, consignation, restitution d’ARF ou remise sous tension n'est fournie.</div><p class="note">Avant déploiement : validation par les responsables métier, sécurité ferroviaire, électricité et cybersécurité ; référentiels applicables ; habilitations ; contrôles ; moyens de transmission officiels ; tests terrain et gestion du mode dégradé.</p>`,`${btn('Compris','modal-cancel','btn-primary')}`);}
 
-function focusPoint(uid){selected=uid;view='plan';render();const p=point(uid),port=el('plan-viewport');if(port&&p){port.scrollLeft=Math.max(0,zoomWidth*p.x/100-port.clientWidth/2);port.scrollTop=Math.max(0,zoomWidth/(state.imgRatio||1718/755)*p.y/100-port.clientHeight/2);}window.scrollTo({top:0,behavior:'instant'});}
-function go(v){if(!(v in TITLES))return;view=v;placement=false;render();window.scrollTo({top:0,behavior:'instant'});}
+function focusPoint(uid){selected=uid;view='plan';render();const p=point(uid),port=el('plan-viewport');const pos=p?pointPos(p):null;if(port&&pos){port.scrollLeft=Math.max(0,zoomWidth*pos.x/100-port.clientWidth/2);port.scrollTop=Math.max(0,zoomWidth/(state.imgRatio||1718/755)*pos.y/100-port.clientHeight/2);}window.scrollTo({top:0,behavior:'instant'});}
+function go(v){if(!(v in TITLES))return;view=v;placement=false;anchorPlacement=null;render();window.scrollTo({top:0,behavior:'instant'});}
 function selection(uid){const port=el('plan-viewport');const left=port?.scrollLeft||0,top=port?.scrollTop||0;selected=uid;render();const next=el('plan-viewport');if(next){next.scrollLeft=left;next.scrollTop=top;}}
 function changeZoom(delta){zoomWidth=Math.min(2450,Math.max(650,zoomWidth+delta));const board=el('plan-board');if(board)board.style.width=zoomWidth+'px';const tag=el('zoom-level');if(tag)tag.textContent=Math.round(zoomWidth/1150*100)+' %';}
+function adjustSize(uid,delta){const p=point(uid);if(!p||!isChef()||state.phase!=='preparation')return; p.size=clamp((p.size||1)+delta,.65,1.9); log('update',p.number,`Taille du symbole ajustée à ${Math.round(p.size*100)} %.`); apply();}
+function setAnchorPlacement(uid,which){const p=point(uid); if(!p||p.symbol!=='volante')return; anchorPlacement={uid,which}; placement=false; view='plan'; render(); toast(`Touchez le plan pour définir l’extrémité ${which==='a'?'A':'B'} de la connexion volante ${p.number}.`);}
 function onAction(action,element){
  const uid=element.dataset.uid;
  switch(action){
@@ -346,9 +438,11 @@ function onAction(action,element){
  case 'select-pin':if(suppressClick){suppressClick=false;break;}selection(uid);break;
  case 'focus-point':focusPoint(uid);break;
  case 'zoom-in':changeZoom(220);break;case 'zoom-out':changeZoom(-220);break;
- case 'toggle-placement':placement=!placement;render();break;
- case 'add-from-settings':view='plan';render();placement=true;render();toast('Touchez le schéma à l’emplacement souhaité.');break;
+ case 'toggle-placement':placement=!placement;anchorPlacement=null;render();break;
+ case 'add-from-settings':view='plan';placement=true;anchorPlacement=null;render();toast('Touchez le plan à l’emplacement souhaité.');break;
  case 'edit-point':editPointModal(point(uid));break;
+ case 'size-up':adjustSize(uid,.08);break;case 'size-down':adjustSize(uid,-.08);break;
+ case 'place-anchor-a':setAnchorPlacement(uid,'a');break;case 'place-anchor-b':setAnchorPlacement(uid,'b');break;
  case 'do-point':{const p=point(uid);if(!p)return;const mode=state.phase==='pose'?'pose':state.phase==='depose'?'depose':null;if(mode)attestationModal(p,mode);break;}
  case 'review-point':reviewModal(point(uid));break;
  case 'view-photo':openPhoto(element.dataset.key);break;
@@ -361,28 +455,38 @@ function onAction(action,element){
  }
 }
 function manualCopy(text){const t=doc.createElement('textarea');t.value=text;doc.body.appendChild(t);t.select();try{if(doc.execCommand('copy'))toast('Brouillon copié.');else toast('Sélectionnez le texte et copiez-le manuellement.');}catch(e){toast('Copie indisponible sur ce navigateur.','error');}t.remove();}
+
 doc.addEventListener('click',ev=>{
  const nav=ev.target.closest('[data-view]');if(nav){go(nav.dataset.view);return;}
  if(ev.target.closest('[data-dismiss]')||ev.target.classList.contains('modal-backdrop')){closeModal();return;}
  const action=ev.target.closest('[data-action]');if(action){ev.preventDefault();onAction(action.dataset.action,action);return;}
- if(placement&&view==='plan'&&isChef()&&state.phase==='preparation'){
-  const board=ev.target.closest('#plan-board');if(board&&!ev.target.closest('.plan-pin')){const r=board.getBoundingClientRect();const x=Math.max(0,Math.min(100,(ev.clientX-r.left)/r.width*100));const y=Math.max(0,Math.min(100,(ev.clientY-r.top)/r.height*100));editPointModal(null,Math.round(x*100)/100,Math.round(y*100)/100);}
+ const board=ev.target.closest('#plan-board');
+ if(board&&isChef()&&state.phase==='preparation'&&!ev.target.closest('.plan-pin,.plan-label,.plan-anchor')){
+   const r=board.getBoundingClientRect();const x=Math.max(0,Math.min(100,(ev.clientX-r.left)/r.width*100));const y=Math.max(0,Math.min(100,(ev.clientY-r.top)/r.height*100));
+   if(anchorPlacement){const p=point(anchorPlacement.uid);if(p){if(anchorPlacement.which==='a'){p.ax=round2(x);p.ay=round2(y);}else{p.bx=round2(x);p.by=round2(y);}syncVolanteCenter(p);log('update',p.number,`Extrémité ${anchorPlacement.which.toUpperCase()} repositionnée sur le plan.`);anchorPlacement=null;apply();toast('Extrémité enregistrée.');}return;}
+   if(placement){editPointModal(null,Math.round(x*100)/100,Math.round(y*100)/100);}
  }
 });
 doc.addEventListener('pointerdown',ev=>{
- const pin=ev.target.closest('.plan-pin');if(!pin||state.phase!=='preparation'||!isChef()||placement)return;
+ const handle=ev.target.closest('.plan-draggable');if(!handle||state.phase!=='preparation'||!isChef()||placement||anchorPlacement)return;
  const board=el('plan-board');if(!board)return;
- drag={uid:pin.dataset.uid,pointer:ev.pointerId,startX:ev.clientX,startY:ev.clientY,x:parseFloat(pin.style.left),y:parseFloat(pin.style.top),moved:false,pin,board};pin.setPointerCapture?.(ev.pointerId);
+ const q=point(handle.dataset.uid);if(!q)return;
+ const type=handle.dataset.dragType||'symbol';
+ drag={uid:q.uid,type,pointer:ev.pointerId,startX:ev.clientX,startY:ev.clientY,board,moved:false,handle,point:q,startVals:{x:q.x,y:q.y,labelX:q.labelX,labelY:q.labelY,ax:q.ax,ay:q.ay,bx:q.bx,by:q.by}};
+ handle.setPointerCapture?.(ev.pointerId);
 });
 doc.addEventListener('pointermove',ev=>{
  if(!drag||drag.pointer!==ev.pointerId)return;
- const dx=ev.clientX-drag.startX,dy=ev.clientY-drag.startY;
- if(Math.hypot(dx,dy)>4)drag.moved=true;
- if(drag.moved){const r=drag.board.getBoundingClientRect();const x=Math.min(99.5,Math.max(.5,drag.x+100*dx/r.width));const y=Math.min(99.5,Math.max(.5,drag.y+100*dy/r.height));drag.pin.style.left=x+'%';drag.pin.style.top=y+'%';}
+ const dx=ev.clientX-drag.startX,dy=ev.clientY-drag.startY; if(Math.hypot(dx,dy)>4)drag.moved=true; if(!drag.moved)return;
+ const r=drag.board.getBoundingClientRect(); const ox=100*dx/r.width; const oy=100*dy/r.height; const p=drag.point;
+ if(drag.type==='label'){p.labelX=clamp(drag.startVals.labelX+ox,1,99);p.labelY=clamp(drag.startVals.labelY+oy,1,99);drag.handle.style.left=p.labelX+'%';drag.handle.style.top=p.labelY+'%';}
+ else if(drag.type==='anchorA'){p.ax=clamp(drag.startVals.ax+ox,.5,99.5);p.ay=clamp(drag.startVals.ay+oy,.5,99.5);syncVolanteCenter(p);drag.handle.style.left=p.ax+'%';drag.handle.style.top=p.ay+'%';}
+ else if(drag.type==='anchorB'){p.bx=clamp(drag.startVals.bx+ox,.5,99.5);p.by=clamp(drag.startVals.by+oy,.5,99.5);syncVolanteCenter(p);drag.handle.style.left=p.bx+'%';drag.handle.style.top=p.by+'%';}
+ else if(p.symbol!=='volante'){p.x=clamp(drag.startVals.x+ox,.5,99.5);p.y=clamp(drag.startVals.y+oy,.5,99.5);drag.handle.style.left=p.x+'%';drag.handle.style.top=p.y+'%';}
 });
 doc.addEventListener('pointerup',ev=>{
  if(!drag||drag.pointer!==ev.pointerId)return;
- if(drag.moved){const p=point(drag.uid);if(p){p.x=Math.round(parseFloat(drag.pin.style.left)*100)/100;p.y=Math.round(parseFloat(drag.pin.style.top)*100)/100;log('update',p.number,'Position provisoire du symbole déplacée sur la capture.');persist();toast('Position provisoire enregistrée.');}suppressClick=true;setTimeout(()=>{suppressClick=false;},250);}drag=null;
+ if(drag.moved){log('update',drag.point.number,'Repère repositionné sur le plan.');persist();render();toast('Placement enregistré.');suppressClick=true;setTimeout(()=>{suppressClick=false;},250);}drag=null;
 });
 doc.addEventListener('pointercancel',()=>{drag=null;});
 doc.addEventListener('change',ev=>{
@@ -396,6 +500,5 @@ el('warning-info').addEventListener('click',helpModal);
  try{db=await openDatabase();}catch(e){toast('Stockage de photos indisponible : les attestations seront désactivées.','error');}
  if(state.customPlan){imgURL=(await fetchImage('plan_custom').catch(()=>null))||'assets/schema_demo.png';}
  selected=state.points[0]?.uid||'';render();
-
 })();
 })();
