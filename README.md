@@ -1,61 +1,55 @@
-# PROTECAT — PWA autonome V0.3.1
+# CATÉNA — PWA de démonstration indépendante · v0.2.0
 
-**Usage : prototype pédagogique de conception et suivi déclaratif de protections électriques caténaires.** Ne remplace ni les règles de protection électrique, ni les dépêches officielles, ni les autorisations délivrées par l'exploitant. Aucune donnée SNCF réelle ne doit être publiée sur GitHub Pages.
+**Projet :** prototype de protection électrique caténaire destiné à devenir un futur module de Journal de chantier.
 
-## Le projet
+**Statut : DÉMONSTRATION UNIQUEMENT — aucun usage opérationnel.** Aucun dépôt de preuves, dépêche officielle, contrôle d’habilitation, réseau multiagents ni autorisation de restitution.
 
-- `site/` : PWA HTML/CSS/JavaScript sans serveur permanent ; démo fictive et stockage sur le navigateur.
-- `site/manifest.webmanifest` et `site/sw.js` : installation sur Android et mise en cache des ressources de la PWA.
-- `site/app.js` : éditeur de plan et parcours d'attestations fictives (aucun backend).
-- `.github/workflows/deploy-pages.yml` : tests et publication depuis la branche `main`.
-- `tests/` : tests du modèle déclaratif et des fichiers PWA.
-- `docs/` : guide PDF et feuille de route.
-- `PROTECAT_MAJ_GITHUB_TERMUX.sh` : mise à jour directe depuis Termux vers GitHub.
+## Fonctionnalités conservées
+- Plan schématique interactif, 12 repères **fictifs**, affectation à des acteurs de démonstration.
+- Parcours de déclaration de pose (VAT / contrôles déclaratifs) avec photographie locale.
+- Recollement par acteur distinct et indication des anomalies.
+- Retrait, recollement, verrouillage de clôture avant vérification de tous les repères.
+- Historique local et exports de démonstration.
+- Installation PWA Android / iOS à partir d’une URL HTTPS, mode hors ligne après première ouverture, notification de nouvelles versions.
 
-## Nouveautés V0.3.x
+## Important : protection des données
+Cette version **n’embarque ni le schéma S11 original ni les coordonnées/repères du chantier réel**. Tous les identifiants et positions affichés sont fictifs. C’est intentionnel : GitHub Pages est un site Internet public. Ne pas importer de vrais plans ou photos de sécurité SNCF dans cette PWA non authentifiée.
 
-- Nom PROTECAT, interface orientée bleu, logo renforcé.
-- Import de fond image ; import PDF disponible à titre expérimental, avec rendu variable selon navigateur.
-- Palette de symboles PPE sans fond blanc, numéros séparés avec lignes de liaison.
-- Ajustement +/- de la taille, déplacement des numéros, poignées A/B pour les connexions volantes.
-- Cache de la PWA mis à jour pour diffuser la version V0.3.1.
+Les données de l’exercice sont conservées dans le stockage du navigateur **sur un seul appareil** et peuvent être supprimées. Le mode hors ligne n’est **pas** une synchronisation multiagents. Les appareils ne voient pas les saisies des autres.
 
-**Limite technique :** le PDF n'est pas encore rendu par un moteur PDF intégré. Pour une superposition précise et fiable, utiliser une image PNG/JPEG du plan pendant cette phase d'étude. La synchronisation entre appareils, l'authentification, les dépêches officielles et la gestion de documents protégés restent à développer.
-
-## Mise à jour Android / Termux
-
-Télécharger séparément dans **Téléchargements** ou **Documents** :
-
-- `PROTECAT_PWA_V0_3_1_GITHUB.zip`
-- `PROTECAT_MAJ_GITHUB_TERMUX.sh`
-
-Puis lancer :
-
-```bash
-termux-setup-storage
-bash "$(find -L "$HOME/storage/shared" -maxdepth 6 -type f -name 'PROTECAT_MAJ_GITHUB_TERMUX.sh' -print -quit 2>/dev/null)"
-```
-
-Le script recherche le ZIP dans les dossiers courants, installe `git`, `gh`, `unzip` si besoin, te connecte à GitHub avec le flux d'authentification officiel, valide les ressources, puis :
-
-1. réutilise `catena-pwa` s'il existe, afin de préserver l'URL de ta PWA déjà installée ;
-2. sinon met à jour `protecat-pwa` s'il existe ;
-3. sinon crée un nouveau dépôt public `protecat-pwa` ;
-4. commit puis `push` sur `main` sans écrasement forcé ;
-5. demande l'activation de GitHub Pages et déclenche le workflow si nécessaire.
-
-Tu peux forcer le choix du dépôt avec `PROTECAT_REPO=nom_du_depot` en préfixe de la commande, si nécessaire.
-
-**À vérifier après exécution :** dans GitHub, le workflow **PROTECAT · Tests et publication PWA** doit être vert. Pour GitHub Pages, la source doit être **GitHub Actions**. Le script ne peut pas garantir qu'un déploiement est terminé au moment où il se termine.
+## Structure
+- `site/` : application statique publiée sur GitHub Pages (aucun serveur permanent à gérer).
+- `site/sw.js` : service worker, cache des fichiers publics de la PWA, sans cache des informations personnelles.
+- `site/manifest.webmanifest` : installation sur l’écran d’accueil.
+- `.github/workflows/deploy-pages.yml` : contrôle et publication automatique à chaque `push` sur `main`.
+- `tests/` : tests métiers et contrôles de structure PWA.
+- `docs/` : plan de travail pour l’intégration future.
 
 ## Tests
+`node tests/test_core.js && node tests/test_pwa.js`
 
-```bash
-node tests/test_core.js
-node tests/test_pwa.js
-node --check site/app.js
+## Publication sur GitHub Pages
+1. Créer un dépôt distinct `catena-pwa` sous votre compte GitHub, de préférence avec l’installateur Termux du paquet.
+2. Importer **tout** le contenu de la racine de ce dossier dans le dépôt, **pas seulement `site/`**.
+3. Dans GitHub `Settings > Pages > Build and deployment > Source`, choisir **GitHub Actions**.
+4. La publication automatique provient de `.github/workflows/deploy-pages.yml` ; depuis `Actions`, relancer le workflow si nécessaire.
+5. L’adresse prend la forme `https://VOTRE-COMPTE.github.io/catena-pwa/` (à vérifier après déploiement réel).
+6. Ouvrir l’adresse avec Chrome Android, menu ⋮ > **Installer l’application**. Sur iOS Safari : Partager > **Sur l’écran d’accueil**.
+
+Pour les mises à jour, conserver `main` comme version publiable et créer une branche pour les changements. Chaque modification doit incrémenter la version du cache de `site/sw.js`, modifier la version affichée et passer les tests. **Ne jamais remplacer la base de Journal de chantier sans validation et recette.**
+
+## Choix techniques
+HTML/CSS/JavaScript natifs, sans CDN externe, sans abonnement et sans serveur Termux. GitHub Pages sert uniquement les fichiers statiques ; rien n’est envoyé en base de données. Le code peut être hébergé ailleurs ultérieurement sans réécriture fondamentale.
+
+## Installation initiale avec un seul script Termux
+
+Télécharger `CATENA_PWA_V0_2_0_GITHUB.zip` et `CATENA_CREER_GITHUB_TERMUX.sh` sur le téléphone. Dans Termux :
+
+```sh
+termux-setup-storage
+bash "$(find -L "$HOME/storage/shared" -maxdepth 5 -name CATENA_CREER_GITHUB_TERMUX.sh -print -quit 2>/dev/null)"
 ```
 
-## Confidentialité et séparation des projets
+Le script installe `gh`, `git` et `unzip` si nécessaire, cherche automatiquement le ZIP dans Téléchargements ou Documents, invite à autoriser GitHub (OAuth dans le navigateur) et crée un dépôt **public contenant uniquement les fichiers fictifs**. Il prépare ensuite GitHub Pages et relance le workflow.
 
-La PWA ne communique pas avec Journal de chantier ni avec Supabase, et n'est pas prête à l'emploi pour un chantier réel. Sur GitHub Pages, le code et les données embarquées sont accessibles publiquement : ne placer aucun plan S11 réel, relevé caténaire, dépêche, document de sécurité ni photographie opérationnelle dans `site/`.
+**Limite** : aucune création ni publication dans ton compte GitHub ne peut être confirmée avant l'exécution de ce script et la réussite du workflow sur GitHub. Si GitHub Pages ne peut être activé automatiquement, l'activer via `Settings > Pages > Source = GitHub Actions`.

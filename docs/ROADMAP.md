@@ -1,4 +1,4 @@
-# Feuille de route PROTECAT
+# Feuille de route CATÉNA
 
 1. **v0.2.0 — PWA autonome (cette livraison)** : stockage local, mode hors ligne, installation Android/iOS, publication GitHub Pages, suivi du numéro de version. Données fictives uniquement.
 2. **v0.3.x — Éditeur de plan** : import contrôlé, symboles, glisser-déposer mobile, validations et versions du plan, affectations testées.

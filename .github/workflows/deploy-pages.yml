@@ -1,4 +1,4 @@
-name: PROTECAT · Tests et publication PWA
+name: CATENA · Tests et publication PWA
 on:
   push:
     branches: [main]
@@ -31,6 +31,6 @@ jobs:
         uses: actions/upload-pages-artifact@v4
         with:
           path: site
-      - name: Publier PROTECAT
+      - name: Publier CATÉNA
         id: deployment
         uses: actions/deploy-pages@v4
