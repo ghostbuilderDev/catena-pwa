@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#12343e" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="referrer" content="no-referrer" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'" />
+  <meta name="description" content="CATÉNA, PWA autonome de démonstration et de suivi pédagogique de protection électrique caténaire." />
+  <link rel="icon" href="assets/icon-192.png" sizes="192x192" />
+  <link rel="apple-touch-icon" href="assets/icon-192.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="stylesheet" href="styles.css" />
+  <title>CATÉNA — Démonstrateur PWA</title>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-symbol" aria-hidden="true">⌁</span><div><strong>CATÉNA<span class="brand-dot">.</span></strong><small>JOURNAL DE CHANTIER</small></div></div>
+      <div class="space-label">ESPACE DE TRAVAIL</div>
+      <div class="sidebar-project"><span class="project-mark">D</span><div><strong>Exercice CATÉNA</strong><span>Plan fictif · PWA 0.2.0</span></div><span class="project-chevron">⌄</span></div>
+      <div class="space-label nav-label">SUIVI DE L’OPÉRATION</div>
+      <nav class="side-nav" aria-label="Navigation principale">
+        <button class="nav-button active" data-view="dashboard"><span class="nav-icon">▦</span> Vue d'ensemble</button>
+        <button class="nav-button" data-view="plan"><span class="nav-icon">⌗</span> Plan interactif <span class="nav-tag">S11</span></button>
+        <button class="nav-button" data-view="mine"><span class="nav-icon">◇</span> Mes perches <span class="count-pill" id="nav-mine-count">0</span></button>
+        <button class="nav-button" data-view="review"><span class="nav-icon">◎</span> Recollement</button>
+        <button class="nav-button" data-view="messages"><span class="nav-icon">↗</span> Transmissions</button>
+        <button class="nav-button" data-view="settings"><span class="nav-icon">⚙</span> Préparation du plan</button>
+      </nav>
+      <div class="sidebar-bottom"><div class="side-lock">♧ <span>Prototype local, autonome</span></div><small>Aucune dépêche officielle émise.</small></div>
+    </aside>
+
+    <div class="main-shell">
+      <header class="topbar">
+        <div class="top-title"><span class="mobile-brand">CATÉNA<span>.</span></span><span class="desktop-breadcrumb">CATÉNA autonome <b>/</b> Protection électrique</span></div>
+        <div class="top-tools"><div class="connection-pill"><span class="connection-dot"></span> <span id="pwa-connection-label">Démo locale</span></div>
+          <button type="button" id="pwa-install" class="pwa-small-button" hidden aria-label="Installer CATÉNA sur cet appareil">Installer</button>
+          <button type="button" id="pwa-update" class="pwa-small-button pwa-update-button" hidden aria-label="Mettre à jour CATÉNA">Mettre à jour</button>
+          <label class="user-chooser"><span class="user-icon">◉</span><span class="sr-only">Utilisateur de démonstration</span><select id="actor-select" aria-label="Utilisateur de démonstration"><option value="chef">Responsable · A. Martin</option><option value="agent1">Terrain · S. Leroy</option><option value="agent2">Terrain · L. Bernard</option><option value="agent3">Terrain · M. Dubois</option></select><span class="chooser-arrow">⌄</span></label>
+        </div>
+      </header>
+
+      <main id="main-content">
+        <section class="warning-banner" aria-label="Avertissement"><span class="warning-icon">!</span><span><strong>DÉMONSTRATION — NE PAS UTILISER POUR UN CHANTIER RÉEL.</strong> Plan fictif sans données SNCF, positions illustratives, données locales non authentifiées. Ne chargez pas de documents réels. Les procédures et dépêches officielles restent obligatoires.</span><button type="button" id="warning-info" aria-label="En savoir plus">ⓘ</button></section>
+        <div id="view-content" class="content-area"></div>
+      </main>
+      <footer class="page-footer">CATÉNA · PWA 0.2.0 · Application indépendante · Future intégration à Journal de chantier <span>© 2026</span></footer>
+    </div>
+  </div>
+
+  <nav class="mobile-nav" aria-label="Navigation mobile">
+    <button data-view="dashboard" class="active"><span>▦</span><small>Accueil</small></button>
+    <button data-view="plan"><span>⌗</span><small>Plan</small></button>
+    <button data-view="mine"><span>◇</span><small>Mes perches</small></button>
+    <button data-view="review"><span>◎</span><small>Recollement</small></button>
+    <button data-view="messages"><span>↗</span><small>Échanges</small></button>
+  </nav>
+  <div id="modal-root"></div>
+  <div id="toast-root" aria-live="polite" aria-atomic="true"></div>
+  <script src="core.js"></script>
+  <script src="app.js"></script>
+  <script src="pwa.js"></script>
+</body>
+</html>

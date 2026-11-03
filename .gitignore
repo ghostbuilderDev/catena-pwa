@@ -1,0 +1,11 @@
+*.zip
+*.env
+.env.*
+node_modules/
+.DS_Store
+__pycache__/
+.DS_Store
+*.xlsx
+*.xls
+*secret*
+*token*
