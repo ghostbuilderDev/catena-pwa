@@ -1,6 +1,6 @@
-/* CATÉNA 0.2.0 : uniquement des ressources publiques de démonstration. */
-const VERSION='catena-pwa-0.2.0';
-const SHELL=['./','./index.html','./styles.css','./core.js','./app.js','./pwa.js','./manifest.webmanifest','./assets/schema_demo.png','./assets/icon-192.png','./assets/icon-512.png'];
+/* CATÉNA 0.2.1 : uniquement des ressources publiques de démonstration. */
+const VERSION='catena-pwa-0.2.1';
+const SHELL=['./','./index.html','./styles.css','./concepteur.html','./concepteur.css','./concepteur.js','./core.js','./app.js','./pwa.js','./manifest.webmanifest','./assets/schema_demo.png','./assets/icon-192.png','./assets/icon-512.png'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(VERSION).then(cache=>cache.addAll(SHELL))));
 self.addEventListener('activate',event=>event.waitUntil((async()=>{
   const keys=await caches.keys();
@@ -17,8 +17,8 @@ self.addEventListener('fetch',event=>{
   if(/\/(api|auth|rest|storage)\//.test(url.pathname))return;
   if(request.mode==='navigate'){
     event.respondWith((async()=>{
-      try{const response=await fetch(request,{cache:'no-store'});if(response.ok){const cache=await caches.open(VERSION);await cache.put('./index.html',response.clone());}return response;}
-      catch(e){return (await caches.match('./index.html'))||Response.error();}
+      try{const response=await fetch(request,{cache:'no-store'});if(response.ok){const cache=await caches.open(VERSION);await cache.put(request,response.clone());}return response;}
+      catch(e){return (await caches.match(request))||(await caches.match('./index.html'))||Response.error();}
     })());
   }else{
     event.respondWith((async()=>{

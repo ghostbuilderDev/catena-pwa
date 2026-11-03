@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#12343e"><meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self'; worker-src 'self'; manifest-src 'self'; object-src blob:; frame-src blob:; base-uri 'self'; form-action 'self'">
+<link rel="icon" href="assets/icon-192.png"><link rel="apple-touch-icon" href="assets/icon-192.png"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="concepteur.css">
+<title>CATÉNA · Conception du plan de perchage</title>
+</head>
+<body>
+<div class="layout">
+ <header class="app-header">
+  <div class="header-left"><a class="back" href="./index.html" title="Retour à CATÉNA">‹</a><img src="assets/icon-192.png" alt="CATÉNA"><div><strong>CATÉNA<span class="dot">.</span></strong><small>CONCEPTEUR DE PLAN DE PERCHAGE</small></div></div>
+  <div class="top-right"><button type="button" id="pwa-install" class="button light" hidden>Installer</button><button type="button" id="pwa-update" class="button light" hidden>Mettre à jour</button><span id="pwa-connection-label" hidden></span><span class="local-chip">● Projet local · démonstration</span><button id="btn-export" class="button primary" type="button">Exporter le plan PNG</button></div>
+ </header>
+ <div class="demo-warning"><strong>PROTOTYPE — AUCUN USAGE OPÉRATIONNEL.</strong> Le plan chargé est stocké uniquement sur cet appareil. La préparation ne constitue pas un PPE validé, une autorisation de travaux ni une dépêche de sécurité.</div>
+ <div class="workspace">
+  <aside class="sidebar">
+   <section class="panel">
+    <div class="section-label">01 / FOND DU PLAN</div><h2>Importer un schéma</h2><p class="help">Image PNG/JPEG/WEBP, ou fichier PDF. Format A4 recommandé pour la préparation.</p>
+    <label class="upload-zone" for="file-input"><span>▧</span><strong>Choisir une image ou un PDF</strong><small>Fichier enregistré localement</small></label>
+    <input type="file" id="file-input" accept="image/png,image/jpeg,image/webp,application/pdf,.pdf" hidden>
+    <button class="text-button" id="example-button" type="button">Importer l'exemple PPE1 extrait d'Excel</button>
+    <div id="loaded-name" class="file-status">Fond : schéma fictif intégré</div>
+    <label class="field-label" for="paper-select">Format de la page</label><select id="paper-select"><option value="landscape">A4 paysage</option><option value="portrait">A4 portrait</option><option value="original">Proportions de l'image</option></select>
+    <p id="pdf-warning" class="pdf-warning" hidden>PDF : prévisualisation native uniquement. L'affichage du PDF peut varier selon le navigateur : pour une position exacte, exportez d'abord sa page en image PNG/JPEG.</p>
+   </section>
+   <section class="panel"><div class="section-label">02 / SYMBOLes</div><h2>Ajouter une connexion</h2><p class="help">Choisis un symbole, puis clique à l'endroit souhaité sur le plan.</p><div id="palette" class="palette"></div><button id="cancel-add" class="button light full" type="button" hidden>Annuler le placement</button></section>
+  </aside>
+  <main class="center">
+   <div class="canvas-toolbar"><div><strong id="plan-title">Plan de protection électrique</strong><small id="board-meta">A4 paysage · 0 symbole</small></div><div class="toolbar-buttons"><button id="zoom-out" type="button" title="Réduire le plan">−</button><span id="zoom-label">100 %</span><button id="zoom-in" type="button" title="Agrandir le plan">+</button><button id="fit" class="fit" type="button">Ajuster</button></div></div>
+   <div id="viewport" class="viewport"><div id="paper" class="paper"><img id="background-image" src="assets/schema_demo.png" alt="Fond de plan"><object id="background-pdf" data="" type="application/pdf" hidden><p>Prévisualisation PDF indisponible sur ce navigateur.</p></object><svg id="overlay" viewBox="0 0 1000 707" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Calque des connexions et de leurs repères"></svg></div></div>
+   <div class="canvas-foot"><span><i class="dot-marker"></i> Calque de symboles indépendant du fond</span><span id="interaction-hint">Glisser pour déplacer un symbole ou son numéro.</span></div>
+   <div class="notice"><strong>À propos de l’exemple Excel :</strong> le fichier image PPE1 est fourni séparément dans l'archive pour tes essais, et non dans le site GitHub public. Le bouton « Importer l'exemple » ouvre le sélecteur de fichiers de ton appareil.</div>
+  </main>
+  <aside class="inspector"><section class="panel"><div class="section-label">03 / PROPRIÉTÉS</div><h2>Connexion sélectionnée</h2><div id="no-selection" class="empty-inspector">Sélectionne un symbole ou un numéro sur le plan pour le modifier.</div><div id="properties" hidden>
+   <label class="field-label" for="field-number">Numéro sur le plan</label><input id="field-number" type="text" maxlength="12" autocomplete="off">
+   <label class="field-label" for="field-type">Symbole</label><select id="field-type"></select>
+   <label class="field-label" for="field-note">Support / désignation</label><input id="field-note" type="text" maxlength="90" placeholder="Ex. support, feeder, sectionnement">
+   <label class="field-label">Taille du symbole</label><div class="size-row"><button id="size-down" type="button">−</button><strong id="size-text">100 %</strong><button id="size-up" type="button">+</button></div>
+   <p class="help" id="drag-help">Glisse le symbole pour le repositionner, puis le numéro jaune indépendamment.</p><button id="delete-symbol" class="button danger full" type="button">Supprimer la connexion</button>
+  </div></section>
+  <section class="panel"><div class="section-label">04 / PROJET</div><h2>Conserver le travail</h2><p class="help">Enregistrement automatique sur cet appareil. Aucune synchronisation entre agents dans cette version.</p><button id="save-json" class="button light full" type="button">Exporter les repères JSON</button><button id="clear" class="button light full" type="button">Réinitialiser les repères</button><div class="save-state" id="save-state">Projet local prêt</div></section>
+ </aside>
+ </div>
+</div>
+<div class="toast" id="toast" role="status" hidden></div>
+<script src="concepteur.js"></script>
+<script src="pwa.js"></script>
+</body></html>

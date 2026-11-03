@@ -75,7 +75,7 @@ function render(){
 function renderDashboard(){
  const c=C.counts(state.points);
  const last=state.events[0];
- return pageTitle('Vue opérationnelle des protections électriques','Bonjour, '+(isChef()?'responsable du perchage':name(currentUser).split(' ')[0]),`${btn('⌗ Ouvrir le plan','nav-plan','btn-primary')}`)+`
+ return pageTitle('Vue opérationnelle des protections électriques','Bonjour, '+(isChef()?'responsable du perchage':name(currentUser).split(' ')[0]),`${btn('⌗ Ouvrir le plan','nav-plan','btn-primary')}<a href="./concepteur.html" class="btn btn-soft">✎ Concevoir un plan</a>`)+`
  <section class="hero-card"><div class="hero-content"><div class="hero-mini">◉ SUIVI DES PROTECTIONS ÉLECTRIQUES</div><h2>Chaque perche suivie.<br>Chaque étape tracée.</h2><p>Du plan initial au recollement de chaque protection, retrouvez toutes les informations au même endroit. Prototype de formation sans valeur opérationnelle.</p><div class="hero-tags"><span>⌗ Schéma S11</span><span>◉ ${esc(phaseText())}</span><span>◷ Mise à jour locale</span></div></div><div class="hero-illustration" aria-hidden="true">⌁</div></section>
  <div class="dashboard-stats">
   <div class="card stat"><div class="stat-label">Connexions planifiées</div><div class="stat-value">${c.total}</div><div class="stat-icon">⌗</div><div class="stat-foot">Repères de démonstration</div></div>

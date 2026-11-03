@@ -1,4 +1,4 @@
-/* CATÉNA PWA 0.2.0 - installation, connexion, mise à jour contrôlée. */
+/* CATÉNA PWA 0.2.1 - installation, connexion, mise à jour contrôlée. */
 (() => {
   'use strict';
   const installButton=document.querySelector('#pwa-install');

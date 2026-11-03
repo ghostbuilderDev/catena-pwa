@@ -24,7 +24,7 @@ jobs:
         with:
           node-version: '22'
       - name: Vérifier les règles de démonstration
-        run: node tests/test_core.js && node tests/test_pwa.js
+        run: node tests/test_core.js && node tests/test_pwa.js && node tests/test_concepteur.js
       - name: Configurer Pages
         uses: actions/configure-pages@v5
       - name: Préparer les fichiers statiques

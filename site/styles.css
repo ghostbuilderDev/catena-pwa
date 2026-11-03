@@ -27,3 +27,6 @@
 @media (max-width:740px){.pwa-small-button{font-size:11px;padding:8px 9px}.top-tools{gap:6px}}
 @media(max-width:760px){.connection-pill{display:none}}
 @media(max-width:380px){.user-chooser select{max-width:112px}.topbar{padding-left:11px;padding-right:11px}}
+
+/* CATÉNA 0.2.1 : concepteur en module isolé */
+.designer-nav{display:flex;text-decoration:none;margin-bottom:13px;color:#ecffff;background:#1e5c6f;border:1px solid #398da2;box-shadow:inset 3px 0 #40d6bf}.designer-nav:hover{background:#236b7d;color:#fff}.designer-nav .nav-tag{color:#c9f8e5}.mobile-nav a{text-decoration:none;border:0;background:transparent;color:#2f7c89;padding:6px 5px 5px;min-width:52px;display:flex;flex-direction:column;align-items:center;gap:2px}.mobile-nav a span{font-size:23px;line-height:1}.mobile-nav a small{font-size:9px;font-weight:800}
