@@ -1,13 +1,13 @@
-# CATÉNA V0.2.2 — Correctif Termux
+# PEC V0.2.2 — Correctif Termux
 
 La mise à jour précédente s’arrêtait sur `ENOENT` dans `tests/test_concepteur.js` : le fichier
 `EXEMPLE_LOCAL_PPE1_EXCEL/EXEMPLE_PPE1_Excel.png` est intentionnellement privé et absent de
 GitHub. Le test prend maintenant en compte les deux contextes : ZIP local (avec exemple) et
 GitHub (sans exemple). Aucune donnée PPE1 de chantier n’est transférée.
 
-# CATÉNA — PWA V0.2.1 (concepteur de plans)
+# PEC — PWA V0.2.1 (concepteur de plans)
 
-Cette livraison repart exactement de la **PWA CATÉNA V0.2.0** et ajoute un **concepteur séparé** (`site/concepteur.html`). Aucune modification à Journal de chantier ni à Supabase.
+Cette livraison repart exactement de la **PWA PEC V0.2.0** et ajoute un **concepteur séparé** (`site/concepteur.html`). Aucune modification à Journal de chantier ni à Supabase.
 
 ## Fonctions
 
@@ -44,4 +44,17 @@ L'archive contient également `FOND_S11_SANS_CONNEXIONS_AJOUTEES.png`, le fond d
 
 ## Mise à jour GitHub depuis Termux
 
-Télécharger le ZIP puis copier les commandes de la réponse ChatGPT, qui extraient automatiquement `CATENA_MAJ_CONCEPTEUR_TERMUX.sh` depuis ce ZIP. Ce script clone le dépôt existant `ghostbuilderDev/catena-pwa`, ajoute uniquement les sources de la PWA, crée un commit et pousse sur `main`, sans forcer l'historique. Vérifiez ensuite le workflow GitHub Pages.
+Télécharger le ZIP puis copier les commandes de la réponse ChatGPT, qui extraient automatiquement `PEC_MAJ_CONCEPTEUR_TERMUX.sh` depuis ce ZIP. Ce script clone le dépôt existant `ghostbuilderDev/catena-pwa`, ajoute uniquement les sources de la PWA, crée un commit et pousse sur `main`, sans forcer l'historique. Vérifiez ensuite le workflow GitHub Pages.
+
+
+## Nouveautés 0.2.3
+- Nom visible : PEC
+- Le plan s’ajuste mieux dans sa fenêtre
+- Le plan se déplace plus facilement
+- Zoom plus intuitif dans l’image
+- Connexion volante plus simple à positionner
+- Fenêtre de réglage du symbole améliorée
+
+
+### Correctif de publication Termux
+Le premier ZIP de la v0.2.3 contenait le script de la v0.2.2, qui attendait un ancien nom de dossier. La livraison corrigée utilise le nom de dossier correct, vérifie la présence des fichiers avant le `git push` et conserve les clés de stockage de la v0.2.2 (`catena-concepteur-v021`, `catena-concepteur-fonds-v1`) afin de retrouver les plans locaux déjà préparés. Le cache PWA est relevé à `catena-pwa-0.2.3`.

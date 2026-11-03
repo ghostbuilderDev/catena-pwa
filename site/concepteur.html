@@ -5,12 +5,12 @@
 <meta name="theme-color" content="#12343e"><meta name="referrer" content="no-referrer">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self'; worker-src 'self'; manifest-src 'self'; object-src blob:; frame-src blob:; base-uri 'self'; form-action 'self'">
 <link rel="icon" href="assets/icon-192.png"><link rel="apple-touch-icon" href="assets/icon-192.png"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="concepteur.css">
-<title>CATÉNA · Conception du plan de perchage</title>
+<title>PEC · Conception du plan de perchage · v0.2.3</title>
 </head>
 <body>
 <div class="layout">
  <header class="app-header">
-  <div class="header-left"><a class="back" href="./index.html" title="Retour à CATÉNA">‹</a><img src="assets/icon-192.png" alt="CATÉNA"><div><strong>CATÉNA<span class="dot">.</span></strong><small>CONCEPTEUR DE PLAN DE PERCHAGE</small></div></div>
+  <div class="header-left"><a class="back" href="./index.html" title="Retour à PEC">‹</a><img src="assets/icon-192.png" alt="PEC"><div><strong>PEC<span class="dot">.</span></strong><small>CONCEPTEUR DE PLAN DE PERCHAGE</small></div></div>
   <div class="top-right"><button type="button" id="pwa-install" class="button light" hidden>Installer</button><button type="button" id="pwa-update" class="button light" hidden>Mettre à jour</button><span id="pwa-connection-label" hidden></span><span class="local-chip">● Projet local · démonstration</span><button id="btn-export" class="button primary" type="button">Exporter le plan PNG</button></div>
  </header>
  <div class="demo-warning"><strong>PROTOTYPE — AUCUN USAGE OPÉRATIONNEL.</strong> Le plan chargé est stocké uniquement sur cet appareil. La préparation ne constitue pas un PPE validé, une autorisation de travaux ni une dépêche de sécurité.</div>
@@ -29,11 +29,11 @@
   </aside>
   <main class="center">
    <div class="canvas-toolbar"><div><strong id="plan-title">Plan de protection électrique</strong><small id="board-meta">A4 paysage · 0 symbole</small></div><div class="toolbar-buttons"><button id="zoom-out" type="button" title="Réduire le plan">−</button><span id="zoom-label">100 %</span><button id="zoom-in" type="button" title="Agrandir le plan">+</button><button id="fit" class="fit" type="button">Ajuster</button></div></div>
-   <div id="viewport" class="viewport"><div id="paper" class="paper"><img id="background-image" src="assets/schema_demo.png" alt="Fond de plan"><object id="background-pdf" data="" type="application/pdf" hidden><p>Prévisualisation PDF indisponible sur ce navigateur.</p></object><svg id="overlay" viewBox="0 0 1000 707" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Calque des connexions et de leurs repères"></svg></div></div>
-   <div class="canvas-foot"><span><i class="dot-marker"></i> Calque de symboles indépendant du fond</span><span id="interaction-hint">Glisser pour déplacer un symbole ou son numéro.</span></div>
+   <div id="viewport" class="viewport"><div class="paper-wrap"><div id="paper" class="paper"><img id="background-image" src="assets/schema_demo.png" alt="Fond de plan"><object id="background-pdf" data="" type="application/pdf" hidden><p>Prévisualisation PDF indisponible sur ce navigateur.</p></object><svg id="overlay" viewBox="0 0 1000 707" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Calque des connexions et de leurs repères"></svg></div></div></div>
+   <div class="canvas-foot"><span><i class="dot-marker"></i> Calque de symboles indépendant du fond</span><span id="interaction-hint">Glisser un symbole ou son numéro. Déplacer le plan vide avec le doigt. Pincer pour zoomer.</span></div>
    <div class="notice"><strong>À propos de l’exemple Excel :</strong> le fichier image PPE1 est fourni séparément dans l'archive pour tes essais, et non dans le site GitHub public. Le bouton « Importer l'exemple » ouvre le sélecteur de fichiers de ton appareil.</div>
   </main>
-  <aside class="inspector"><section class="panel"><div class="section-label">03 / PROPRIÉTÉS</div><h2>Connexion sélectionnée</h2><div id="no-selection" class="empty-inspector">Sélectionne un symbole ou un numéro sur le plan pour le modifier.</div><div id="properties" hidden>
+  <aside class="inspector"><section class="panel"><div class="section-label">03 / PROPRIÉTÉS</div><h2 id="properties-title">Fenêtre de réglage du symbole</h2><div id="no-selection" class="empty-inspector">Sélectionne un symbole ou un numéro sur le plan pour le modifier.</div><div id="properties" hidden>
    <label class="field-label" for="field-number">Numéro sur le plan</label><input id="field-number" type="text" maxlength="12" autocomplete="off">
    <label class="field-label" for="field-type">Symbole</label><select id="field-type"></select>
    <label class="field-label" for="field-note">Support / désignation</label><input id="field-note" type="text" maxlength="90" placeholder="Ex. support, feeder, sectionnement">

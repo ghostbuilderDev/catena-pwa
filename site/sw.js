@@ -1,5 +1,5 @@
-/* CATÉNA 0.2.1 : uniquement des ressources publiques de démonstration. */
-const VERSION='catena-pwa-0.2.1';
+/* PEC 0.2.3 : uniquement des ressources publiques de démonstration. */
+const VERSION='catena-pwa-0.2.3';
 const SHELL=['./','./index.html','./styles.css','./concepteur.html','./concepteur.css','./concepteur.js','./core.js','./app.js','./pwa.js','./manifest.webmanifest','./assets/schema_demo.png','./assets/icon-192.png','./assets/icon-512.png'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(VERSION).then(cache=>cache.addAll(SHELL))));
 self.addEventListener('activate',event=>event.waitUntil((async()=>{

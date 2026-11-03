@@ -1,8 +1,8 @@
 {
   "id": "./",
-  "name": "CATÉNA — Protection électrique (Démonstration)",
-  "short_name": "CATÉNA",
-  "description": "PWA de démonstration du suivi des protections électriques caténaires. Aucune autorisation opérationnelle.",
+  "name": "PEC — Protection électrique caténaire",
+  "short_name": "PEC",
+  "description": "PWA de démonstration pour la conception des plans de protection électrique caténaire.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
