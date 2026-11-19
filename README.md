@@ -1,60 +1,55 @@
-# PEC V0.2.2 — Correctif Termux
+# PEC — Protection électrique caténaire
+## Version 0.3.0 — Coordination déclarative / démonstration
 
-La mise à jour précédente s’arrêtait sur `ENOENT` dans `tests/test_concepteur.js` : le fichier
-`EXEMPLE_LOCAL_PPE1_EXCEL/EXEMPLE_PPE1_Excel.png` est intentionnellement privé et absent de
-GitHub. Le test prend maintenant en compte les deux contextes : ZIP local (avec exemple) et
-GitHub (sans exemple). Aucune donnée PPE1 de chantier n’est transférée.
+Cette version ajoute un **espace Coordination** à l’application PEC et conserve le **concepteur de plan** de la V0.2.4 avec ses six symboles et la CV à arc unique.
 
-# PEC — PWA V0.2.1 (concepteur de plans)
+### Accès
+- `site/index.html` : application existante, lien vers la coordination
+- `site/concepteur.html` : plan de perchage, symboles inchangés, import image/PDF
+- `site/coordination.html` : suivi des agents, responsable, journal et déclarations
 
-Cette livraison repart exactement de la **PWA PEC V0.2.0** et ajoute un **concepteur séparé** (`site/concepteur.html`). Aucune modification à Journal de chantier ni à Supabase.
+### Parcours implémenté (simulation, non opérationnel)
+1. Import du plan préparé sur **ce même navigateur** depuis le concepteur. Affectation nominative et groupes d’ordre configurés manuellement.
+2. Saisie d'une **référence documentaire externe** correspondant à l'attestation de fin de première étape ; préparation du plan déclarée vérifiée.
+3. Collecte des déclarations de pose, avec cases d’attestation personnelles et **photo obligatoire**.
+4. Recollement par le responsable, séparé du déclarant ; rejet/écart bloquant et correction déclarative.
+5. Passage au suivi de la phase travaux **sans aucun ordre d'engager les travaux**.
+6. Déclarations de retrait **par groupes dans l'ordre inverse** ; photos et recollement distinct.
+7. Fin du suivi, avec référence documentaire externe. **Ne restitue pas une installation ni une attestation**.
 
-## Fonctions
+Les agents d'un même groupe peuvent déposer leurs déclarations indépendamment, mais le groupe suivant reste verrouillé tant que tous les points du précédent ne sont pas recollés. L'ordre des groupes est une **configuration humaine à vérifier** : il n'est pas calculé automatiquement selon les règles de sécurité ferroviaire.
 
-- Import **PNG/JPEG/WEBP** et aperçu **PDF** ; le fichier reste local (IndexedDB), sans téléversement.
-- Format A4 paysage/portrait ou proportions du fichier.
-- Six symboles de légende, sans fond, posables sur le plan, avec numéro détachable et trait.
-- Connexions volantes : deux extrémités repositionnables.
-- Ajustement rapide de taille, zoom et export PNG (pour les fonds image).
-- Sauvegarde automatique des repères sur l'appareil, export JSON des coordonnées.
+### Concepteur S11 : lisibilité locale
+- Import PNG, JPEG, WEBP ou PDF ; PDF natif **non calibré** pour un placement précis.
+- Traitement local d'une **image** : niveaux de contraste et renforcement de contours sans serveur et sans IA.
+- Aperçu original/corrigé et possibilité de restaurer la source.
+- **Aucune restauration réelle de détail perdu** ; ne modifie pas la géométrie de la caténaire ou le contenu métier.
+- L'image d'origine doit être conservée et toute correction doit être comparée au document de référence approuvé.
 
-## Plan PPE1 du fichier Excel : exemple privé
+### Limites essentielles
+- Aucun compte vérifié, aucune habilitation certifiée, aucun horodatage serveur. Le choix d'un profil est une **simulation**.
+- Les mises à jour d'état sont visibles entre onglets du **même navigateur/origine** via `localStorage` et `BroadcastChannel`. **Aucune synchronisation entre téléphones ou transmission sécurisée n'est implémentée.**
+- Photos stockées dans IndexedDB local, non dans GitHub. Le JSON de suivi n'exporte pas les photos.
+- Aucune dépêche officielle émise ; la « transmission » est un **brouillon non officiel** à copier.
+- Le code PWA est public via GitHub Pages. **Ne jamais intégrer dans `site/` un plan S11 réel ou une procédure interne.**
+- Non autorisé à piloter de véritables protections électriques, même en cas de tableau de bord entièrement vert.
 
-Dans l’archive, le fichier `EXEMPLE_LOCAL_PPE1_EXCEL/EXEMPLE_PPE1_Excel.png` est un rendu haute définition de la feuille **PPE1** du classeur fourni. Il contient des données de schéma qui ne doivent pas être publiées sur un dépôt public. Le dossier est **volontairement hors de `site/`**.
+### Contrôles
+```sh
+node tests/test_core.js
+node tests/test_pwa.js
+node tests/test_concepteur.js
+node tests/test_workflow.js
+node tests/test_coordination.js
+```
 
-Pour l'utiliser : téléchargez ou extrayez la photo du ZIP sur votre appareil ; ouvrez `Concevoir un PPE` puis cliquez sur « Importer l'exemple PPE1 extrait d'Excel » et choisissez cette image. Les connexions déjà intégrées dans la feuille Excel sont dessinées dans l'image : ne les confondez pas avec les nouveaux symboles éditables que vous placez.
+### Mise à jour GitHub depuis Termux
+Télécharger l'archive ZIP `PEC_PWA_V0_3_0_COORDINATION.zip` et lancer le script `MAJ_TERMUX.sh` contenu à sa racine. L'archive vérifie son contenu avant tout clonage et ne pousse **jamais** les exemples privés sur GitHub.
 
-Pour créer un nouveau plan, chargez une **image sans annotations**, puis posez les symboles du concepteur.
+### Travail encore indispensable pour une version exploitable en entreprise
+Validation métier et juridique des séquences et libellés, intégration d'un serveur authentifié avec comptes nominatifs/habilitations, RLS/contrôles côté serveur, traçabilité horodatée et inaltérable, stockage privé des photos, accusés de réception sécurisés, états de synchronisation, gestion offline sûre, tests de terrain, cybersécurité et circuit de dépêches homologué. Aucun de ces mécanismes n'est prétendu présent en V0.3.0.
 
-## Limite PDF
+Référentiel étudié : **SERCE / OPPBTP / SNCF Réseau — Consignation pour travaux caténaires, mode opératoire, version 2, avril 2023** (document remis par l'utilisateur, non embarqué dans le site). Des textes ultérieurs ont été publiés et nécessitent un examen de conformité avant tout déploiement.
 
-La PWA peut importer le PDF localement pour visualisation dans le navigateur ; ce mode est une **prévisualisation native non calibrée**. Sur certains navigateurs (notamment mobiles), le PDF peut ne pas s'afficher ou comporter son propre zoom et ses marges. Les coordonnées de symboles ne sont alors **pas garanties**. Exportez la page PDF en PNG/JPEG pour la conception précise et pour exporter le résultat. Le PDF n'est pas envoyé à un service externe.
-
-## GitHub Pages / confidentialité
-
-Le workflow GitHub Pages ne publie que le dossier `site/`. Ne copiez jamais le rendu PPE1 privé dans `site/assets` ni dans un dépôt public. Le script Termux ne publie que les fichiers publics de l'application ; jamais le dossier `EXEMPLE_LOCAL_PPE1_EXCEL`.
-
-## Tests
-
-`node tests/test_core.js && node tests/test_pwa.js && node tests/test_concepteur.js`
-
-**Démonstration non opérationnelle.** Ne pas utiliser pour valider, consigner, autoriser une pose ou un retrait de protection électrique caténaire. Le contrôle du plan et les procédures et documents SNCF restent extérieurs à cette application.
-
-L'archive contient également `FOND_S11_SANS_CONNEXIONS_AJOUTEES.png`, le fond d'image S11 sous-jacent issu du même fichier Excel ; il facilite un essai à partir d'un fond moins chargé, sans les repères graphiques ajoutés par la feuille PPE1.
-
-## Mise à jour GitHub depuis Termux
-
-Télécharger le ZIP puis copier les commandes de la réponse ChatGPT, qui extraient automatiquement `PEC_MAJ_CONCEPTEUR_TERMUX.sh` depuis ce ZIP. Ce script clone le dépôt existant `ghostbuilderDev/catena-pwa`, ajoute uniquement les sources de la PWA, crée un commit et pousse sur `main`, sans forcer l'historique. Vérifiez ensuite le workflow GitHub Pages.
-
-
-## Nouveautés 0.2.3
-- Nom visible : PEC
-- Le plan s’ajuste mieux dans sa fenêtre
-- Le plan se déplace plus facilement
-- Zoom plus intuitif dans l’image
-- Connexion volante plus simple à positionner
-- Fenêtre de réglage du symbole améliorée
-
-
-### Correctif de publication Termux
-Le premier ZIP de la v0.2.3 contenait le script de la v0.2.2, qui attendait un ancien nom de dossier. La livraison corrigée utilise le nom de dossier correct, vérifie la présence des fichiers avant le `git push` et conserve les clés de stockage de la v0.2.2 (`catena-concepteur-v021`, `catena-concepteur-fonds-v1`) afin de retrouver les plans locaux déjà préparés. Le cache PWA est relevé à `catena-pwa-0.2.3`.
+### Architecture cible
+Voir `docs/ARCHITECTURE_PRODUCTION_SECURITÉ.md` pour le schéma d’authentification, de synchronisation, de contrôle serveur, de mode dégradé et d’audit à concevoir avant tout usage réel.

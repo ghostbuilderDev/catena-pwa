@@ -31,12 +31,17 @@ if (fs.existsSync(privateDir)) {
 // Non-régression : les plans locaux de la version 0.2.2 restent accessibles.
 assert.ok(js.includes("const STORAGE='catena-concepteur-v021'"));
 assert.ok(js.includes("const DB='catena-concepteur-fonds-v1'"));
-assert.ok(fs.readFileSync(path.join(site,'sw.js'),'utf8').includes("catena-pwa-0.2.3"));
-// Le script Termux n’est pas commité dans le dépôt public : ne le tester que dans le ZIP livré.
-const updaterFile=path.join(root,'PEC_MAJ_GITHUB_TERMUX.sh');
-if (fs.existsSync(updaterFile)) {
- const updater=fs.readFileSync(updaterFile,'utf8');
- assert.ok(updater.includes('PEC_PWA_V0_2_3_CONCEPTEUR'));
- assert.ok(!updater.includes('SRC="$WORK/archive/CATENA_PWA_V0_2_2_CONCEPTEUR"'));
+assert.ok(fs.readFileSync(path.join(site,'sw.js'),'utf8').includes("pec-pwa-0.3.0-coordination"));
+// Régression : aucune duplication d'arc au centre, raccordement à deux extrémités.
+const volanteJs=js.substring(js.indexOf("if(p.type==='volante'){"),js.indexOf('} else {', js.indexOf("if(p.type==='volante'){")));
+assert.ok(!volanteJs.includes('symbolSvg(p.type,s)'), 'La connexion volante contient encore le second arc au centre.');
+// Le script de mise à jour est présent seulement dans le ZIP local, pas sur le site.
+const updaterFile=path.join(root,'MAJ_TERMUX.sh');
+if(fs.existsSync(updaterFile)){
+  const updater=fs.readFileSync(updaterFile,'utf8');
+  assert.ok(updater.includes('site/concepteur.js'));
+  assert.ok(updater.includes('SOURCE='));
+  assert.ok(updater.includes('--verify'));
+  assert.ok(!updater.includes('SRC="$WORK/archive/PEC_PWA_V0_2_3_CONCEPTEUR"'));
 }
 console.log('✓ Concepteur : import image/PDF, surcouche SVG et cache PWA vérifiés.');

@@ -1,10 +1,10 @@
-/* PEC 0.2.3 : uniquement des ressources publiques de démonstration. */
-const VERSION='catena-pwa-0.2.3';
-const SHELL=['./','./index.html','./styles.css','./concepteur.html','./concepteur.css','./concepteur.js','./core.js','./app.js','./pwa.js','./manifest.webmanifest','./assets/schema_demo.png','./assets/icon-192.png','./assets/icon-512.png'];
+/* PEC 0.3.0 : code public uniquement ; pas de photos ni fonds privés en cache. */
+const VERSION='pec-pwa-0.3.0-coordination';
+const SHELL=['./','./index.html','./styles.css','./concepteur.html','./concepteur.css','./concepteur.js','./plan-enhance.js','./plan-enhance.css','./coordination.html','./coordination.css','./coordination.js','./workflow.js','./core.js','./app.js','./pwa.js','./manifest.webmanifest','./assets/schema_demo.png','./assets/icon-192.png','./assets/icon-512.png'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(VERSION).then(cache=>cache.addAll(SHELL))));
 self.addEventListener('activate',event=>event.waitUntil((async()=>{
   const keys=await caches.keys();
-  await Promise.all(keys.filter(key=>key.startsWith('catena-pwa-')&&key!==VERSION).map(key=>caches.delete(key)));
+  await Promise.all(keys.filter(key=>(key.startsWith('catena-pwa-')||key.startsWith('pec-pwa-'))&&key!==VERSION).map(key=>caches.delete(key)));
   await self.clients.claim();
 })()));
 self.addEventListener('message',event=>{if(event.data?.type==='SKIP_WAITING')self.skipWaiting();});

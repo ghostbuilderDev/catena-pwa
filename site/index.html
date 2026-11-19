@@ -13,7 +13,7 @@
   <link rel="icon" href="assets/icon-192.png" sizes="192x192" />
   <link rel="apple-touch-icon" href="assets/icon-192.png" />
   <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css" /><style>.coord-entry{margin:18px 36px 0;padding:13px 16px;display:flex;align-items:center;justify-content:space-between;gap:14px;border-radius:13px;border:1px solid #c7daec;background:#eff6ff;color:#284a72}.coord-entry strong{display:block;font-size:12px}.coord-entry span{display:block;font-size:10px;color:#718aa9;margin-top:5px}.coord-entry a{white-space:nowrap;padding:10px 13px;border-radius:9px;color:white;background:#2a65bd;text-decoration:none;font-weight:800;font-size:11px}@media(max-width:740px){.coord-entry{margin:13px 13px 0;flex-direction:column;align-items:stretch}.coord-entry a{text-align:center}}</style>
   <title>PEC — Démonstrateur PWA</title>
 </head>
 <body>
@@ -25,6 +25,7 @@
       <div class="space-label nav-label">SUIVI DE L’OPÉRATION</div>
       <a class="nav-button designer-nav" href="./concepteur.html"><span class="nav-icon">✎</span> Concevoir un PPE <span class="nav-tag">NOUVEAU</span></a>
       <nav class="side-nav" aria-label="Navigation principale">
+        <a class="nav-button" href="./coordination.html"><span class="nav-icon">↔</span> Coordination des protections</a>
         <button class="nav-button active" data-view="dashboard"><span class="nav-icon">▦</span> Vue d'ensemble</button>
         <button class="nav-button" data-view="plan"><span class="nav-icon">⌗</span> Plan interactif <span class="nav-tag">S11</span></button>
         <button class="nav-button" data-view="mine"><span class="nav-icon">◇</span> Mes perches <span class="count-pill" id="nav-mine-count">0</span></button>
@@ -47,7 +48,7 @@
 
       <main id="main-content">
         <section class="warning-banner" aria-label="Avertissement"><span class="warning-icon">!</span><span><strong>DÉMONSTRATION — NE PAS UTILISER POUR UN CHANTIER RÉEL.</strong> Plan fictif sans données SNCF, positions illustratives, données locales non authentifiées. Ne chargez pas de documents réels. Les procédures et dépêches officielles restent obligatoires.</span><button type="button" id="warning-info" aria-label="En savoir plus">ⓘ</button></section>
-        <div id="view-content" class="content-area"></div>
+        <div class="coord-entry"><div><strong>Nouveau · Coordination des protections</strong><span>Déclarations des agents, recollement du responsable et ordre pose/retrait en simulation</span></div><a href="./coordination.html">Ouvrir la coordination ↗</a></div><div id="view-content" class="content-area"></div>
       </main>
       <footer class="page-footer">PEC · PWA 0.2.3 · Application indépendante · Future intégration à Journal de chantier <span>© 2026</span></footer>
     </div>

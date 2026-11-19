@@ -1,0 +1,11 @@
+.enhance-launch{border:1px solid #a3c2ee;border-radius:10px;background:#e9f3ff;color:#29538b;padding:11px 12px;font-size:12px;font-weight:800;margin:9px 0;width:100%;cursor:pointer}
+.enhance-dialog{border:0;border-radius:19px;padding:0;width:min(640px,94vw);max-height:92dvh;background:white;box-shadow:0 25px 90px #04183280;color:#254363}
+.enhance-dialog::backdrop{background:#061b34b3;backdrop-filter:blur(4px)}
+.enhance-head{padding:18px 22px;border-bottom:1px solid #dbe6f2;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.enhance-head h2{font-size:20px;margin:0}.enhance-head small{display:block;margin-top:6px;font-size:11px;color:#73869f}
+.enhance-close{border:0;background:#edf2fb;border-radius:10px;height:34px;width:34px;font-size:21px;color:#416794;cursor:pointer}
+.enhance-body{padding:18px 22px;overflow:auto;max-height:66dvh}
+#enhance-preview{width:100%;height:auto;max-height:365px;object-fit:contain;border:1px solid #dce6f2;border-radius:10px;background:white;margin:12px 0}
+.enhance-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.enhance-grid label{display:grid;gap:6px;font-weight:800;font-size:11px;color:#5b7495}.enhance-grid select,.enhance-grid input{width:100%;padding:10px;border:1px solid #d9e4f1;border-radius:9px;background:white;color:#284c77}
+.enhance-remark{font-size:11px;line-height:1.5;padding:12px 14px;border:1px solid #f0e1b8;background:#fff9e8;border-radius:12px;color:#886832}.enhance-actions{padding:15px 22px;border-top:1px solid #e1e9f2;display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}.enhance-actions button{padding:10px 13px;border:1px solid #d3e1f1;color:#335d93;background:#f7faff;border-radius:10px;font-weight:800;font-size:11px;cursor:pointer}.enhance-actions button.apply{background:#2865c4;color:white;border-color:#2865c4}.enhance-actions button:disabled{opacity:.5}
+@media(max-width:680px){.enhance-dialog{width:100vw;max-height:96dvh;border-radius:19px 19px 0 0}.enhance-grid{grid-template-columns:1fr}.enhance-actions button{flex:1}}

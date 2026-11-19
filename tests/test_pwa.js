@@ -16,7 +16,7 @@ assert.match(html,/src="pwa.js"/);
 const sw=read('sw.js');
 assert.match(sw,/addEventListener\('install'/);
 assert.match(sw,/addEventListener\('fetch'/);
-for(const res of ['index.html','styles.css','core.js','app.js','pwa.js','manifest.webmanifest','assets/schema_demo.png','assets/icon-192.png','assets/icon-512.png']){
+for(const res of ['index.html','styles.css','core.js','app.js','pwa.js','manifest.webmanifest','assets/schema_demo.png','assets/icon-192.png','assets/icon-512.png','coordination.html','coordination.css','coordination.js','workflow.js','plan-enhance.js','plan-enhance.css']){
  assert.ok(fs.existsSync(path.join(root,res)),`Ressource manquante: ${res}`);
  assert.ok(sw.includes("'./"+res+"'"),`Non précaché: ${res}`);
 }

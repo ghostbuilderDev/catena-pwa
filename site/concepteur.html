@@ -4,14 +4,14 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#12343e"><meta name="referrer" content="no-referrer">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self'; worker-src 'self'; manifest-src 'self'; object-src blob:; frame-src blob:; base-uri 'self'; form-action 'self'">
-<link rel="icon" href="assets/icon-192.png"><link rel="apple-touch-icon" href="assets/icon-192.png"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="concepteur.css">
+<link rel="icon" href="assets/icon-192.png"><link rel="apple-touch-icon" href="assets/icon-192.png"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="concepteur.css"><link rel="stylesheet" href="plan-enhance.css">
 <title>PEC · Conception du plan de perchage · v0.2.3</title>
 </head>
 <body>
 <div class="layout">
  <header class="app-header">
   <div class="header-left"><a class="back" href="./index.html" title="Retour à PEC">‹</a><img src="assets/icon-192.png" alt="PEC"><div><strong>PEC<span class="dot">.</span></strong><small>CONCEPTEUR DE PLAN DE PERCHAGE</small></div></div>
-  <div class="top-right"><button type="button" id="pwa-install" class="button light" hidden>Installer</button><button type="button" id="pwa-update" class="button light" hidden>Mettre à jour</button><span id="pwa-connection-label" hidden></span><span class="local-chip">● Projet local · démonstration</span><button id="btn-export" class="button primary" type="button">Exporter le plan PNG</button></div>
+  <div class="top-right"><a href="./coordination.html" class="button primary">Coordination ↗</a><button type="button" id="pwa-install" class="button light" hidden>Installer</button><button type="button" id="pwa-update" class="button light" hidden>Mettre à jour</button><span id="pwa-connection-label" hidden></span><span class="local-chip">● Projet local · démonstration</span><button id="btn-export" class="button primary" type="button">Exporter le plan PNG</button></div>
  </header>
  <div class="demo-warning"><strong>PROTOTYPE — AUCUN USAGE OPÉRATIONNEL.</strong> Le plan chargé est stocké uniquement sur cet appareil. La préparation ne constitue pas un PPE validé, une autorisation de travaux ni une dépêche de sécurité.</div>
  <div class="workspace">
@@ -20,7 +20,7 @@
     <div class="section-label">01 / FOND DU PLAN</div><h2>Importer un schéma</h2><p class="help">Image PNG/JPEG/WEBP, ou fichier PDF. Format A4 recommandé pour la préparation.</p>
     <label class="upload-zone" for="file-input"><span>▧</span><strong>Choisir une image ou un PDF</strong><small>Fichier enregistré localement</small></label>
     <input type="file" id="file-input" accept="image/png,image/jpeg,image/webp,application/pdf,.pdf" hidden>
-    <button class="text-button" id="example-button" type="button">Importer l'exemple PPE1 extrait d'Excel</button>
+    <button class="text-button" id="example-button" type="button">Importer l'exemple PPE1 extrait d'Excel</button><button type="button" id="enhance-open" class="enhance-launch">✧ Améliorer la lisibilité du fond (local)</button>
     <div id="loaded-name" class="file-status">Fond : schéma fictif intégré</div>
     <label class="field-label" for="paper-select">Format de la page</label><select id="paper-select"><option value="landscape">A4 paysage</option><option value="portrait">A4 portrait</option><option value="original">Proportions de l'image</option></select>
     <p id="pdf-warning" class="pdf-warning" hidden>PDF : prévisualisation native uniquement. L'affichage du PDF peut varier selon le navigateur : pour une position exacte, exportez d'abord sa page en image PNG/JPEG.</p>
@@ -44,7 +44,8 @@
  </aside>
  </div>
 </div>
+<dialog id="enhance-dialog" class="enhance-dialog"><div class="enhance-head"><div><h2>Amélioration du fond S11</h2><small>Traitement local — sans API, ni intelligence artificielle</small></div><button id="enhance-close" class="enhance-close" aria-label="Fermer">×</button></div><div class="enhance-body"><div class="enhance-remark">Netteté et contraste peuvent faciliter la lecture, mais ne corrigent pas les erreurs techniques, les tracés manquants ou les informations fausses. Conserve le schéma d’origine approuvé.</div><canvas id="enhance-preview" width="320" height="180" aria-label="Aperçu de l'image améliorée"></canvas><div class="enhance-grid"><label>Profil de correction<select id="enhance-mode"><option value="doux">Lisibilité douce</option><option value="net" selected>Netteté et contraste</option><option value="contraste">Contraste renforcé</option></select></label><label>Intensité du filtre<input id="enhance-strength" type="range" min="0" max="100" step="5" value="35"></label></div><p id="enhance-message" style="font-size:11px;color:#6c84a3;margin-top:13px">Importe une image S11 pour la traiter sur cet appareil.</p></div><div class="enhance-actions"><button id="enhance-compare" type="button">Afficher original</button><button id="enhance-restore" type="button">Rétablir l'original</button><button id="enhance-apply" type="button" class="apply">Utiliser ce fond corrigé</button></div></dialog>
 <div class="toast" id="toast" role="status" hidden></div>
-<script src="concepteur.js"></script>
+<script src="concepteur.js"></script><script src="plan-enhance.js"></script>
 <script src="pwa.js"></script>
 </body></html>

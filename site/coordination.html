@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#102b56">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; worker-src 'self'; manifest-src 'self'; object-src blob:; frame-src blob:; base-uri 'self'; form-action 'self'">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="assets/icon-192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
+<link rel="stylesheet" href="coordination.css">
+<title>PEC · Coordination des protections caténaires</title>
+</head>
+<body>
+<div id="app" class="app">
+ <aside class="sidebar">
+  <a href="./index.html" class="brand"><img src="assets/icon-192.png" alt=""><div><strong>PEC<span class="brand-accent">.</span></strong><small>PROTECTION ÉLECTRIQUE CATÉNAIRE</small></div></a>
+  <div class="sidemeta">ESPACE DE COORDINATION</div>
+  <div class="op-pill"><span class="op-mark">P</span><div><strong id="side-op-title">Exercice de coordination</strong><span>Simulation · v0.3.0</span></div></div>
+  <div class="sidemeta">NAVIGATION</div>
+  <nav id="sidebar-nav" aria-label="Navigation principale">
+   <button class="navitem active" data-view="suivi"><span class="navicon">▦</span><span>Tableau de bord</span></button>
+   <button class="navitem" data-view="plan"><span class="navicon">⌗</span><span>Plan interactif</span></button>
+   <button class="navitem" data-view="agents"><span class="navicon">◇</span><span>Mes protections</span></button>
+   <button class="navitem" data-view="journal"><span class="navicon">◷</span><span>Journal et transmissions</span></button>
+   <button class="navitem" data-view="preparer"><span class="navicon">⚙</span><span>Préparer l’opération</span></button>
+  </nav>
+  <div class="side-bottom"><div>♧ Démonstrateur local</div><small>Ne remplace aucune dépêche ou attestation officielle.</small></div>
+ </aside>
+ <div class="main-area">
+  <header class="topbar">
+   <div class="top-left"><span class="mobile-logo">PEC<span>.</span></span><span class="breadcrumb">Coordination <span>/</span> <b id="current-section">Tableau de bord</b></span></div>
+   <div class="top-actions"><span class="local-tag"><i></i> Démo locale</span><select id="actor" aria-label="Profil simulé"><option value="chef">Responsable — A. Martin</option><option value="agent1">Agent — S. Leroy</option><option value="agent2">Agent — L. Bernard</option><option value="agent3">Agent — M. Dubois</option></select><button id="pwa-install" class="install" type="button" hidden>Installer</button><button id="pwa-update" class="install" type="button" hidden>Mettre à jour</button><span id="pwa-connection-label" hidden></span></div>
+  </header>
+  <div class="banner"><span class="banner-icon">!</span><div><strong>PROTOTYPE — NE PAS UTILISER POUR UNE PROTECTION RÉELLE.</strong> Comptes simulés, échanges entre onglets du même navigateur uniquement. Aucune authentification, transmission sécurisée ou autorisation officielle n'est fournie.</div><a href="./concepteur.html">Concepteur de plan <span>↗</span></a></div>
+  <main id="screen" class="content"></main>
+  <footer class="foot">PEC · Coordination V0.3.0 · Démonstration locale · Référentiel documentaire d’avril 2023 à valider avec les consignes applicables</footer>
+ </div>
+</div>
+<nav class="mobile-nav" aria-label="Navigation mobile"><button data-view="suivi" class="active"><span>▦</span><small>Accueil</small></button><button data-view="plan"><span>⌗</span><small>Plan</small></button><button data-view="agents"><span>◇</span><small>Mes points</small></button><button data-view="journal"><span>◷</span><small>Journal</small></button><button data-view="preparer"><span>⚙</span><small>Préparer</small></button></nav>
+<div id="modal" class="modal-container"></div>
+<div id="toast" class="toast" hidden></div>
+<script src="workflow.js"></script>
+<script src="coordination.js"></script>
+<script src="pwa.js"></script>
+</body></html>

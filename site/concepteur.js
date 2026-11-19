@@ -1,4 +1,4 @@
-/* PEC 0.2.3 — éditeur local de démonstration, aucun transfert serveur. */
+/* PEC 0.2.4 — éditeur local de démonstration, aucun transfert serveur. */
 (()=>{'use strict';
 const $=id=>document.getElementById(id);
 const STORAGE='catena-concepteur-v021';
@@ -11,7 +11,7 @@ const LEGEND=[
  {id:'self',label:'Connexion ligne / rail / SELF'},
  {id:'rail',label:'Connexion ligne / rail'}
 ];
-const defaultPlan={version:'0.2.3',title:'Plan de protection électrique',paper:'landscape',imageRatio:1.414,mime:'image/png',backgroundName:'Schéma fictif intégré',custom:false,points:[]};
+const defaultPlan={version:'0.2.4',title:'Plan de protection électrique',paper:'landscape',imageRatio:1.414,mime:'image/png',backgroundName:'Schéma fictif intégré',custom:false,points:[]};
 let project=load();
 let db=null,selected=null,addType=null,drag=null,zoom=1,blobUrl=null,backgroundImageUrl='assets/schema_demo.png',pinch=null;
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,Number(v)));
@@ -45,8 +45,7 @@ function drawSvg(includeSelection=true){
    const cy=Math.min(ay,by)-clamp(s*.55,16,50);
    volante=`<path data-id="${esc(p.id)}" data-part="arc" d="M ${ax} ${ay} C ${ax} ${cy}, ${bx} ${cy}, ${bx} ${by}" stroke="#355cb0" stroke-width="${active?7:4}" fill="none" opacity=".93" style="cursor:grab"/>`+
             `<g data-id="${esc(p.id)}" data-part="a" style="cursor:grab"><circle cx="${ax}" cy="${ay}" r="${active?14:10}" fill="#2c67c0" opacity=".18"/><circle cx="${ax}" cy="${ay}" r="${active?7.5:6}" fill="#2c67c0" stroke="white" stroke-width="2"/></g>`+
-            `<g data-id="${esc(p.id)}" data-part="b" style="cursor:grab"><circle cx="${bx}" cy="${by}" r="${active?14:10}" fill="#2c67c0" opacity=".18"/><circle cx="${bx}" cy="${by}" r="${active?7.5:6}" fill="#2c67c0" stroke="white" stroke-width="2"/></g>`+
-            `<g data-id="${esc(p.id)}" data-part="symbol" style="cursor:grab" transform="translate(${x} ${y})"><circle r="${s*.66}" fill="transparent"/>${symbolSvg(p.type,s)}</g>`;
+            `<g data-id="${esc(p.id)}" data-part="b" style="cursor:grab"><circle cx="${bx}" cy="${by}" r="${active?14:10}" fill="#2c67c0" opacity=".18"/><circle cx="${bx}" cy="${by}" r="${active?7.5:6}" fill="#2c67c0" stroke="white" stroke-width="2"/></g>`;
   } else {
    volante=`<g data-id="${esc(p.id)}" data-part="symbol" style="cursor:grab" transform="translate(${x} ${y})"><circle r="${s*.62}" fill="transparent" stroke="${active?'#8ab8ff':'none'}" stroke-width="2" />${symbolSvg(p.type,s)}</g>`;
   }
@@ -57,7 +56,7 @@ function drawSvg(includeSelection=true){
 }
 function renderSvg(){overlay.setAttribute('viewBox',`0 0 1000 ${height()}`);const src=drawSvg(true);overlay.innerHTML=src.slice(src.indexOf('>')+1,src.lastIndexOf('</svg>'));}
 function renderPalette(){$('palette').innerHTML=LEGEND.map(s=>`<button type="button" data-type="${s.id}" class="${addType===s.id?'active':''}">${iconFor(s.id)}<span>${esc(s.label)}</span></button>`).join('');$('cancel-add').hidden=!addType;}
-function renderProperties(){const p=getPoint();$('no-selection').hidden=!!p;$('properties').hidden=!p;if(!p)return;$('field-number').value=p.number;$('field-type').value=p.type;$('field-note').value=p.note||'';$('size-text').textContent=`${Math.round((p.size||1)*100)} %`;$('properties-title').textContent=`Fenêtre de réglage · repère ${p.number}`;$('drag-help').textContent=p.type==='volante'?'Déplace les deux extrémités de l’arc de part et d’autre du sectionnement, puis ajuste le numéro jaune.' : 'Déplace le symbole, puis le numéro jaune indépendamment. Le zoom du plan se fait directement dans la fenêtre.';}
+function renderProperties(){const p=getPoint();$('no-selection').hidden=!!p;$('properties').hidden=!p;if(!p)return;$('field-number').value=p.number;$('field-type').value=p.type;$('field-note').value=p.note||'';$('size-text').textContent=`${Math.round((p.size||1)*100)} %`;$('properties-title').textContent=`Fenêtre de réglage · repère ${p.number}`;$('drag-help').textContent=p.type==='volante'?'La connexion volante n’affiche qu’un seul arc. Déplace uniquement les deux points d’extrémité pour ajuster l’arc de part et d’autre du sectionnement, puis ajuste le numéro jaune.' : 'Déplace le symbole, puis le numéro jaune indépendamment. Le zoom du plan se fait directement dans la fenêtre.';}
 function fitBaseWidth(){const pad=20;const vw=Math.max(220,viewport.clientWidth-pad*2);const vh=Math.max(180,viewport.clientHeight-pad*2);return Math.max(260,Math.min(vw,vh*sizeRatio()));}
 function applyZoom(center=true){const fit=fitBaseWidth();const prevW=paper.getBoundingClientRect().width||fit;const prevH=paper.getBoundingClientRect().height||fit/sizeRatio();const vpRect=viewport.getBoundingClientRect();const anchor=applyZoom.anchor||{x:vpRect.width/2,y:vpRect.height/2};const contentX=viewport.scrollLeft+anchor.x;const contentY=viewport.scrollTop+anchor.y;const relX=prevW?contentX/prevW:.5;const relY=prevH?contentY/prevH:.5;paper.style.width=Math.round(fit*zoom)+'px';paper.style.aspectRatio=String(sizeRatio());$('zoom-label').textContent=Math.round(zoom*100)+' %';
  const newW=fit*zoom,newH=(fit/sizeRatio())*zoom;
@@ -70,10 +69,12 @@ function applyZoom(center=true){const fit=fitBaseWidth();const prevW=paper.getBo
  applyZoom.anchor=null;
 }
 function update(){renderPalette();renderProperties();renderSvg();$('board-meta').textContent=`${project.paper==='landscape'?'A4 paysage':project.paper==='portrait'?'A4 portrait':'Format original'} · ${project.points.length} symbole(s)`;$('loaded-name').textContent='Fond : '+project.backgroundName;$('paper-select').value=project.paper;$('pdf-warning').hidden=project.mime!=='application/pdf';$('btn-export').disabled=project.mime==='application/pdf';applyZoom(true);}
-function makePoint(type,x,y){const id='p-'+Date.now()+'-'+Math.random().toString(36).slice(2,7);const p={id,number:indexNext(),type,note:'',x:rnd(x),y:rnd(y),lx:rnd(clamp(x+6,2,97)),ly:rnd(clamp(y-9,2,97)),size:1};if(type==='volante'){p.ax=rnd(clamp(x-5,2,98));p.ay=rnd(y);p.bx=rnd(clamp(x+5,2,98));p.by=rnd(y);}project.points.push(p);selected=id;addType=null;save();update();toast(type==='volante'?'Connexion volante ajoutée. Déplace ses deux extrémités directement sur le plan.' : 'Symbole ajouté. Son numéro peut être déplacé indépendamment.');}
+function makePoint(type,x,y){const id='p-'+Date.now()+'-'+Math.random().toString(36).slice(2,7);const p={id,number:indexNext(),type,note:'',x:rnd(x),y:rnd(y),lx:rnd(clamp(x+6,2,97)),ly:rnd(clamp(y-9,2,97)),size:1};if(type==='volante'){p.ax=rnd(clamp(x-5,2,98));p.ay=rnd(y);p.bx=rnd(clamp(x+5,2,98));p.by=rnd(y);}project.points.push(p);selected=id;addType=null;save();update();toast(type==='volante'?'Connexion volante ajoutée. Ajuste uniquement les deux points d’extrémité pour placer l’arc.' : 'Symbole ajouté. Son numéro peut être déplacé indépendamment.');}
 function coords(evt){const rect=paper.getBoundingClientRect();return {x:clamp((evt.clientX-rect.left)/rect.width*100,1,99),y:clamp((evt.clientY-rect.top)/rect.height*100,1,99)};}
-function movePart(p,part,v){if(part==='symbol'){if(p.type==='volante'){const dx=v.x-p.x,dy=v.y-p.y;p.ax=rnd(clamp(p.ax+dx,1,99));p.ay=rnd(clamp(p.ay+dy,1,99));p.bx=rnd(clamp(p.bx+dx,1,99));p.by=rnd(clamp(p.by+dy,1,99));p.x=rnd((p.ax+p.bx)/2);p.y=rnd((p.ay+p.by)/2);}else{p.x=rnd(v.x);p.y=rnd(v.y);}}
- else if(part==='label'){p.lx=rnd(v.x);p.ly=rnd(v.y);} else if(part==='a'||part==='b'){p[part+'x']=rnd(v.x);p[part+'y']=rnd(v.y);p.x=rnd((p.ax+p.bx)/2);p.y=rnd((p.ay+p.by)/2);} else if(part==='arc'){/* selection only */}}
+function movePart(p,part,v){if(part==='symbol'){if(p.type==='volante')return; p.x=rnd(v.x);p.y=rnd(v.y);} 
+ else if(part==='label'){p.lx=rnd(v.x);p.ly=rnd(v.y);} 
+ else if(part==='a'||part==='b'){p[part+'x']=rnd(v.x);p[part+'y']=rnd(v.y);p.x=rnd((p.ax+p.bx)/2);p.y=rnd((p.ay+p.by)/2);} 
+ else if(part==='arc'){const dx=v.x-p.x,dy=v.y-p.y;p.ax=rnd(clamp(p.ax+dx,1,99));p.ay=rnd(clamp(p.ay+dy,1,99));p.bx=rnd(clamp(p.bx+dx,1,99));p.by=rnd(clamp(p.by+dy,1,99));p.x=rnd((p.ax+p.bx)/2);p.y=rnd((p.ay+p.by)/2);}}
 
 function setZoom(next,anchorClientX=null,anchorClientY=null){zoom=clamp(next,.6,3.6);if(anchorClientX!=null){const r=viewport.getBoundingClientRect();applyZoom.anchor={x:anchorClientX-r.left,y:anchorClientY-r.top};}applyZoom(true);}
 function pointerDown(e){
@@ -92,6 +93,7 @@ function pointerMove(e){
  if(drag.part==='label')movePart(p,'label',{x:clamp(drag.plx+dx,1,99),y:clamp(drag.ply+dy,1,99)});
  if(drag.part==='a')movePart(p,'a',{x:clamp(drag.ax+dx,1,99),y:clamp(drag.ay+dy,1,99)});
  if(drag.part==='b')movePart(p,'b',{x:clamp(drag.bx+dx,1,99),y:clamp(drag.by+dy,1,99)});
+ if(drag.part==='arc')movePart(p,'arc',{x:clamp(drag.px+dx,1,99),y:clamp(drag.py+dy,1,99)});
  renderSvg();
 }
 function pointerUp(e){
@@ -138,6 +140,11 @@ function download(name,blob){const u=URL.createObjectURL(blob),a=document.create
 $('save-json').onclick=()=>download('PEC_reperes_'+new Date().toISOString().slice(0,10)+'.json',new Blob([JSON.stringify({...project,attention:'Fond stocké séparément dans IndexedDB : exporter aussi le plan PNG. Les coordonnées n’ont aucune valeur technique.'},null,2)],{type:'application/json'}));
 function loadImage(url){return new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src=url;});}
 $('btn-export').onclick=async()=>{if(project.mime==='application/pdf')return toast('Export PNG non disponible depuis le PDF natif. Importer une image du PDF.');try{const ratio=sizeRatio(),canvas=document.createElement('canvas');canvas.width=2400;canvas.height=Math.round(2400/ratio);const ctx=canvas.getContext('2d');ctx.fillStyle='white';ctx.fillRect(0,0,canvas.width,canvas.height);const bg=await loadImage(backgroundImageUrl);const scale=Math.min(canvas.width/bg.width,canvas.height/bg.height),w=bg.width*scale,h=bg.height*scale;ctx.drawImage(bg,(canvas.width-w)/2,(canvas.height-h)/2,w,h);const svg=new Blob([drawSvg(false)],{type:'image/svg+xml;charset=utf-8'}),url=URL.createObjectURL(svg);try{const ov=await loadImage(url);ctx.drawImage(ov,0,0,canvas.width,canvas.height);}finally{URL.revokeObjectURL(url);}canvas.toBlob(b=>{if(!b)return toast('Export impossible.');download('PEC_plan_perchage_'+new Date().toISOString().slice(0,10)+'.png',b);toast('Image du plan exportée. Vérification technique nécessaire avant usage.');},'image/png');}catch(e){toast('Export impossible : '+e.message);}};
+// Bridge local pour l'amélioration visuelle et la coordination (sans modifier les symboles).
+window.PEC_EDITOR={importFile,project:()=>project,currentBackgroundBlob:async()=>{
+ if(project.custom&&db)return getBlob('background');
+ const res=await fetch('assets/schema_demo.png');return res.blob();
+}};
 window.addEventListener('resize',update);
 window.addEventListener('keydown',e=>{if(e.key==='Escape'&&addType){addType=null;renderPalette();}});
 (async()=>{try{db=await getDb();if(project.custom){const blob=await getBlob('background');if(blob)showBackground(blob);else{project.custom=false;project.backgroundName='Schéma fictif intégré';project.mime='image/png';showBackground(null);}}}catch(e){toast('Enregistrement des fonds indisponible.');}update();})();

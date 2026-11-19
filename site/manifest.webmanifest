@@ -2,7 +2,7 @@
   "id": "./",
   "name": "PEC — Protection électrique caténaire",
   "short_name": "PEC",
-  "description": "PWA de démonstration pour la conception des plans de protection électrique caténaire.",
+  "description": "Conception et coordination déclarative de protections électriques caténaires, en démonstration locale. Aucune autorisation officielle.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
@@ -11,7 +11,7 @@
     "minimal-ui"
   ],
   "background_color": "#f5f8f9",
-  "theme_color": "#12343e",
+  "theme_color": "#102b56",
   "lang": "fr",
   "orientation": "any",
   "icons": [
